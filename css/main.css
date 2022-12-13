@@ -1,0 +1,93 @@
+body {
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body,
+#map {
+  height: 100%;
+  width: 100%;
+}
+
+.info {
+  padding: 6px 8px;
+  font: 14px/16px Arial, Helvetica, sans-serif;
+  background: white;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+.info h4 {
+  margin: 0 0 5px;
+  color: #777;
+}
+
+#overpass-api-controls {
+  padding: 10px;
+  background-color: rgb(255, 255, 255);
+}
+
+#overpass-api-controls a {
+  display: inline;
+}
+
+.leaflet-container {
+  background: black !important;
+  outline: 0;
+}
+
+@media screen {
+#printSection {
+    display: none;
+}
+}
+
+@media print {
+body * {
+  visibility:hidden;
+}
+#printSection, #printSection * {
+  visibility:visible;
+}
+#printSection {
+  position:absolute;
+  left:0;
+  top:0;
+}
+}
+
+.lanes td.picto  {
+  border-right: 1px solid black;
+  border-left: 1px solid black;
+}
+.bikelane {
+
+}
+
+.bikelane-green {
+  background: green
+}
+
+.rotate180 {
+  -webkit-transform:rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  transform: rotate(180deg);
+}
+
+table {
+  border-spacing:0; /* Removes the cell spacing via CSS */
+  border-collapse: collapse;  /* Optional - if you don't want to have double border where cells touch */
+}
+
+.streetmix td {
+  text-align: center
+}
+
+
+.leaflet-popup-content {
+  width: max-content !important;
+}

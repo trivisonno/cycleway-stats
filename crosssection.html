@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+html {
+	font-family: sans-serif;
+}
+	</style>
+	<link rel="stylesheet" href="css/main.css" />
+</style>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js"></script>
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<script src="js/leaflet-providers.js"></script>
+<script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+<script src="js/leaflet.geometryutil.js"></script>
+<script src="js/leaflet.almostover.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAsRGZTMRQOGhb43NNg_FtbXDYdqdLHVpA" async defer></script>
+<script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+
+<!-- CSS only -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+<script src="js/osmtostreetmix.js"></script>
+<script src="js/lineOffset1.js"></script>
+
+<link rel="stylesheet" href="https://ppete2.github.io/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.css" />
+<script src="https://ppete2.github.io/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
+<script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css" type="text/css">
+<script src="https://unpkg.com/leaflet-gesture-handling"></script>
+
+<script src="js/calcstats.js"></script>
+
+<style>
+.mb-3 {
+  margin-bottom: 0rem !important;
+}</style>
+</head>
+<body onload="loadFeature();">
+	<div id="container" style="display:flex;flex-flow: row wrap;">
+	<div id="controls" style="float:left;width:30%;height:100%">
+
+		<form>
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">oneway</label>
+			  <select id="oneway" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				  <option value="yes">yes</option>
+				  <option value="" selected>no</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">maxspeed</label>
+			  <select id="maxspeed" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected></option>
+					<option value="5">5</option>
+				  <option value="10">10</option>
+				  <option value="15">15</option>
+				  <option value="20">20</option>
+				  <option value="25">25</option>
+				  <option value="30">30</option>
+				  <option value="35">35</option>
+				  <option value="40">40</option>
+				  <option value="45">45</option>
+				  <option value="50">50</option>
+				  <option value="55">55</option>
+				  <option value="60">60</option>
+				  <option value="65">65</option>
+				  <option value="70">70</option>
+				  <option value="75">75</option>
+				</select>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="mphCheck" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">mph</span>
+			  </div>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">lanes</label>
+			  <select id="lanes" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				  <option value="1">1</option>
+				  <option value="2" selected>2</option>
+				  <option value="3">3</option>
+				  <option value="4">4</option>
+				  <option value="5">5</option>
+				  <option value="6">6</option>
+				  <option value="7">7</option>
+				  <option value="8">8</option>
+				  <option value="9">9</option>
+				  <option value="10">10</option>
+				  <option value="11">11</option>
+				  <option value="12">12</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">lanes:forward</label>
+			  <select id="lanes:forward" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>0</option>
+				  <option value="1">1</option>
+				  <option value="2">2</option>
+				  <option value="3">3</option>
+				  <option value="4">4</option>
+				  <option value="5">5</option>
+				  <option value="6">6</option>
+				  <option value="7">7</option>
+				  <option value="8">8</option>
+				  <option value="9">9</option>
+				  <option value="10">10</option>
+				  <option value="11">11</option>
+				  <option value="12">12</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">lanes:backward</label>
+			  <select id="lanes:backward" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>0</option>
+				  <option value="1">1</option>
+				  <option value="2">2</option>
+				  <option value="3">3</option>
+				  <option value="4">4</option>
+				  <option value="5">5</option>
+				  <option value="6">6</option>
+				  <option value="7">7</option>
+				  <option value="8">8</option>
+				  <option value="9">9</option>
+				  <option value="10">10</option>
+				  <option value="11">11</option>
+				  <option value="12">12</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">lanes:width</label>
+			  <input id="lanes:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="11' default"></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftLaneCheck" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">cycleway:lane:width</label>
+			  <input id="cycleway:lane:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="6' default"></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftBikeLaneCheck" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+
+			<!-- <div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" id="basic-addon1">cycleway:both</span>
+			  <select class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				  <option value="" selected></option>
+				  <option value="lane">Bike lane</option>
+				  <option value="shared_lane">Mixed lane (sharrow)</option>
+				  <option value="separated">Separated (not drawn with lanes)</option>
+				  <option value="track">Cycle track (drawn with lanes)</option>
+				</select>
+			</div> -->
+
+			<div class="input-group mb-3">
+					  <label class="col-sm-7 col-form-label" style="">cycleway</label>
+					  <select id="cycleway" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+						  <option value="" selected>None</option>
+						  <option value="lane">Bike lane</option>
+						  <option value="shared_lane">Mixed lane (sharrow)</option>
+						  <option value="track">Cycle track (drawn with lanes)</option>
+						  <option value="share_busway">Mixed bus lane (sharrow)</option>
+						  <option value="separated">Separated (not drawn with lanes)</option>
+						</select>
+					</div>
+
+
+
+		<div class="input-group mb-3">
+			<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:right:separation:right</label>
+			<select id="cycleway:right:separation:right" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				<option value="" selected>None</option>
+				<option value="barred_area">Painted buffer</option>
+				<option value="flex_post">Flex post</option>
+				<option value="jersey_barrier">Concrete barrier</option>
+				<option value="bollard">Bollard</option>
+			</select>
+		</div>
+
+	<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:right</label>
+			  <select id="cycleway:right" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				  <option value="" selected>None</option>
+				  <option value="lane">Bike lane</option>
+				  <option value="shared_lane">Mixed lane (sharrow)</option>
+				  <option value="track">Cycle track (drawn with lanes)</option>
+				  <option value="share_busway">Mixed bus lane (sharrow)</option>
+				  <option value="separated">Separated (not drawn with lanes)</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:right:separation:left</label>
+				<select id="cycleway:right:separation:left" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>None</option>
+					<option value="barred_area">Painted buffer</option>
+					<option value="flex_post">Flex post</option>
+					<option value="jersey_barrier">Concrete barrier</option>
+					<option value="bollard">Bollard</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:right:traffic_mode:left</label>
+				<select id="cycleway:right:traffic_mode:left" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>None</option>
+					<option value="parking">Parking-protected cycleway</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:left:separation:right</label>
+				<select id="cycleway:left:separation:right" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>None</option>
+					<option value="barred_area">Painted buffer</option>
+					<option value="flex_post">Flex post</option>
+					<option value="jersey_barrier">Concrete barrier</option>
+					<option value="bollard">Bollard</option>
+				</select>
+			</div>
+
+		<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:left</label>
+			  <select id ="cycleway:left" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				  <option value="" selected>None</option>
+				  <option value="lane">Bike lane</option>
+				  <option value="shared_lane">Mixed lane (sharrow)</option>
+				  <option value="track">Cycle track (drawn with lanes)</option>
+				  <option value="share_busway">Mixed bus lane (sharrow)</option>
+				  <option value="separated">Separated (not drawn with lanes)</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:left:separation:left</label>
+				<select id="cycleway:left:separation:left" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>None</option>
+					<option value="barred_area">Painted buffer</option>
+					<option value="flex_post">Flex post</option>
+					<option value="jersey_barrier">Concrete barrier</option>
+					<option value="bollard">Bollard</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:left:traffic_mode:left</label>
+				<select id="cycleway:left:traffic_mode:left" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>None</option>
+					<option value="parking">Parking-protected cycleway</option>
+				</select>
+			</div>
+
+		<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">parking:lane:right</label>
+			  <select id="parking:lane:right" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				  <option value="" selected>None</option>
+				  <option value="parallel">Parallel</option>
+				</select>
+			</div>
+
+		<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">parking:lane:right:parallel</label>
+			  <select id="parking:lane:right:parallel" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected></option>
+					<option value="on_street">On-street</option>
+				  <option value="street_side">Street-side (not in travel lane)</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">parking:lane:left</label>
+			  <select id="parking:lane:left" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+				  <option value="" selected>None</option>
+				  <option value="parallel">Parallel</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">parking:lane:left:parallel</label>
+			  <select id="parking:lane:left:parallel" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected></option>
+					<option value="on_street">On-street</option>
+				  <option value="street_side">Street-side (not in travel lane)</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">parking:lane:both:width</label>
+			  <input id="parking:lane:both:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="8' default" value=""></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftParkingLaneRightWidthCheck" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">motor_vehicle</label>
+			  <select id="motor_vehicle" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>Allowed</option>
+					<option value="no">Prohibited</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">bicycle</label>
+			  <select id="bicycle" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected></option>
+					<option value="yes">Allowed</option>
+					<option value="no">Prohibited</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">bus</label>
+			  <select id="bus" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected></option>
+					<option value="yes">Allowed</option>
+					<option value="no">Prohibited</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">bus:lanes:forward</label>
+			  <select id="bus:lanes:forward" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected></option>
+					<option value="designated">designated</option>
+					<option value="yes|designated">yes|designated</option>
+					<option value="yes|yes|designated">yes|yes|designated</option>
+					<option value="yes|yes|yes|designated">yes|yes|yes|designated</option>
+					<!-- <option value="yes|designated|yes">yes|designated|yes</option>
+					<option value="yes|yes|designated|yes">yes|yes|designated|yes</option> -->
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">bus:lanes:backward</label>
+			  <select id="bus:lanes:backward" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected></option>
+					<option value="designated">designated</option>
+					<option value="yes|designated">yes|designated</option>
+					<option value="yes|yes|designated">yes|yes|designated</option>
+					<option value="yes|yes|yes|designated">yes|yes|yes|designated</option>
+					<!-- <option value="yes|designated|yes">yes|designated|yes</option>
+					<option value="yes|yes|designated|yes">yes|yes|designated|yes</option> -->
+				</select>
+			</div>
+
+
+
+
+			<input id="name" type="text" class="form-control invisible" aria-label="Default select example" aria-describedby="basic-addon1" value=""></input>
+			<input id="ref" type="text" class="form-control invisible" aria-label="Default select example" aria-describedby="basic-addon1" value=""></input>
+			<input id="width:carriageway" type="text" class="form-control invisible" aria-label="Default select example" aria-describedby="basic-addon1" value=""></input>
+			<input id="highway" type="text" class="form-control invisible" aria-label="Default select example" aria-describedby="basic-addon1" value=""></input>
+		</form>
+		<div id="code" style="float:left;padding:0px;width:100%"></div>
+		<button  id="dlJson" type="button" class="btn btn-primary">Copy OSM tags</button>
+	</div>
+
+		<!-- <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" style="float:right;">View map</button> -->
+		<div style="float:right;width:70%;height:100%">
+	<div id="content" style="float:right;width:100%;"></div>
+	<div id="map" style="float:right;width:100%;height:400px">Loading map geometry...</div>
+	<input type="number" id="centerlineOffset" name="centerlineOffset" step="0.5" value="0">
+</div>
+
+</div>
+<!--
+<div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRight" aria-labelledby="offcanvasRightLabel" style="width:80%">
+  <div class="offcanvas-header">
+    <h5 id="offcanvasRightLabel">Aerial Lane Viewer</h5>
+    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body">
+
+
+  </div>
+</div> -->
+	<script>
+var feature;
+var streetsAsGeojson;
+var wayLineString;
+var multiplier = 1.6;
+
+var map = L.map('map', {
+	zoomSnap: 1,
+	almostOnMouseMove: false,
+    gestureHandling: true
+}).setView([41.48850773250226, -81.70947558879621], 2);
+
+// map.pm.addControls({
+//   position: 'topleft'
+// });
+
+L.control.polylineMeasure({
+  'unit': 'landmiles',
+  'showClearControl': true
+}).addTo(map);
+
+var hybridMutant = L.gridLayer
+  .googleMutant({
+    maxZoom: 22,
+    type: "hybrid",
+    maxNativeZoom: 22
+  })
+  .addTo(map);
+
+
+function loadFeature() {
+
+// 	loadCrossSection({'properties': {'tags': {
+//   "oneway": "no",
+//   "maxspeed": "25 mph",
+//   "lanes": 5,
+//   "cycleway:right": "lane",
+//   "cycleway:left": "lane"
+// }}});
+
+
+	getWayData(id)
+}
+
+var form = $('form');
+var group = $('.input-group select');
+
+var id = 55553302;
+var id = findGetParameter('id')
+var lanesLayer = L.featureGroup().addTo(map);
+
+var feature;
+
+$('form').on('change', function(e) {
+  e.preventDefault();
+	matchElements();
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+});
+
+function matchElements() {
+	var elements = document.getElementsByTagName("select")
+	for (var i = 0; i < elements.length; i++) {
+			if(elements[i].value == "") {
+				delete feature.properties.tags[elements[i].id]
+			} else {
+				if (isNaN(elements[i].value) == true) {
+					feature.properties.tags[elements[i].id] = elements[i].value
+				} else {
+				if (elements[i].id == 'maxspeed' && $('#mphCheck').is(':checked')==true) {
+					feature.properties.tags[elements[i].id] = Number(elements[i].value) + " mph"
+				} else {
+					feature.properties.tags[elements[i].id] = Number(elements[i].value)
+				}
+			}
+		}
+	}
+	if (document.getElementById("lanes:width").value != "") {
+		if (document.getElementById("ftLaneCheck").checked && (document.getElementById("lanes:width").value.includes("'")) == false) {
+			feature.properties.tags['lanes:width'] = document.getElementById("lanes:width").value + "'"
+		} else {
+			feature.properties.tags['lanes:width'] = Number(document.getElementById("lanes:width").value)
+		}
+
+	}
+	if (document.getElementById("cycleway:lane:width").value != "") {
+		if (document.getElementById("ftBikeLaneCheck").checked && (document.getElementById("cycleway:lane:width").value.includes("'")) == false) {
+			feature.properties.tags['cycleway:lane:width'] = document.getElementById("cycleway:lane:width").value + "'"
+		} else {
+			feature.properties.tags['cycleway:lane:width'] = Number(document.getElementById("cycleway:lane:width").value.replace("'",''))
+		}
+
+	}
+
+	if (document.getElementById("parking:lane:both:width").value != "") {
+		if (document.getElementById("ftParkingLaneRightWidthCheck").checked && (document.getElementById("parking:lane:both:width").value.includes("'")) == false) {
+			feature.properties.tags['parking:lane:both:width'] = document.getElementById("parking:lane:both:width").value + "'"
+		} else {
+			feature.properties.tags['parking:lane:both:width'] = Number(document.getElementById("parking:lane:both:width").value.replace("'",''))
+		}
+
+	}
+}
+
+
+
+$('#centerlineOffset').on('change', function(e) {
+	e.preventDefault();
+	matchElements();
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+});
+
+
+$('#dlJson').on('click', function(e) {
+  e.preventDefault();
+	// download($('#code').text(), findGetParameter('id')+'.json', 'text/plain');
+	copyTextFunc($('#code').text())
+});
+
+
+document.getElementById("lanes:width").addEventListener("keyup", function(){
+	if (document.getElementById("lanes:width").value!="") {
+		feature.properties.tags['lanes:width'] = document.getElementById("lanes:width").value
+		if (document.getElementById("ftLaneCheck").checked) {
+			feature.properties.tags['lanes:width'] += "'"
+		}
+	} else {
+		delete feature.properties.tags['lanes:width']
+	}
+
+	if ((document.getElementById("lanes:width").value>5 && document.getElementById("ftLaneCheck").checked)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	} else if ((document.getElementById("ftLaneCheck").checked==false)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	}
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("cycleway:lane:width").addEventListener("keyup", function(){
+	if (document.getElementById("cycleway:lane:width").value!="") {
+		feature.properties.tags['cycleway:lane:width'] = document.getElementById("cycleway:lane:width").value
+		if (document.getElementById("ftBikeLaneCheck").checked) {
+			feature.properties.tags['cycleway:lane:width'] += "'"
+		}
+	} else {
+		delete feature.properties.tags['cycleway:lane:width']
+	}
+
+	if ((document.getElementById("cycleway:lane:width").value>1 && document.getElementById("ftBikeLaneCheck").checked)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	} else if ((document.getElementById("ftBikeLaneCheck").checked==false)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	}
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("parking:lane:both:width").addEventListener("keyup", function(){
+	if (document.getElementById("parking:lane:both:width").value!="") {
+		feature.properties.tags['parking:lane:both:width'] = document.getElementById("parking:lane:both:width").value
+		if (document.getElementById("ftParkingLaneRightWidthCheck").checked) {
+			feature.properties.tags['parking:lane:both:width'] += "'"
+		}
+	} else {
+		delete feature.properties.tags['parking:lane:both:width']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+
+
+function loadCrossSection(feature) {
+
+
+	if (feature == null) {
+		feature = {'properties': {'tags': {}}}
+
+		var elements = document.getElementsByTagName("select")
+		for (var i = 0; i < elements.length; i++) {
+		    if(elements[i].value == "") {
+		    } else {
+					if (isNaN(elements[i].value) == true) {
+				feature.properties.tags[elements[i].id] = elements[i].value
+			} else {
+				if (elements[i].id == 'maxspeed' && $('#mphCheck').is(':checked')==true) {
+					feature.properties.tags[elements[i].id] = Number(elements[i].value) + " mph"
+				} else {
+					feature.properties.tags[elements[i].id] = Number(elements[i].value)
+				}
+			}
+			}
+		}
+		if (document.getElementById("lanes:width").value != "") {
+			if (document.getElementById("ftLaneCheck").checked) {
+				feature.properties.tags['lanes:width'] = document.getElementById("lanes:width").value + "'"
+			} else {
+				feature.properties.tags['lanes:width'] = Number(document.getElementById("lanes:width").value)
+			}
+
+		}
+		if (document.getElementById("cycleway:lane:width").value != "") {
+			if (document.getElementById("ftBikeLaneCheck").checked) {
+				feature.properties.tags['cycleway:lane:width'] = document.getElementById("cycleway:lane:width").value + "'"
+			} else {
+				feature.properties.tags['cycleway:lane:width'] = Number(document.getElementById("cycleway:lane:width").value)
+			}
+
+		}
+
+		if (document.getElementById("parking:lane:both:width").value != "") {
+			if (document.getElementById("ftParkingLaneRightWidthCheck").checked) {
+				feature.properties.tags['parking:lane:both:width'] = document.getElementById("parking:lane:both:width").value + "'"
+			} else {
+				feature.properties.tags['parking:lane:both:width'] = Number(document.getElementById("parking:lane:both:width").value)
+			}
+
+		}
+
+
+		feature.properties.tags['highway'] = document.getElementById("highway").value
+
+		if (document.getElementById("name").value != "") {
+			feature.properties.tags['name'] = document.getElementById("name").value
+		}
+
+		if (document.getElementById("ref").value != "") {
+			feature.properties.tags['ref'] = document.getElementById("ref").value
+		}
+
+		if (document.getElementById("width:carriageway").value != "") {
+			feature.properties.tags['width:carriageway'] = document.getElementById("width:carriageway").value
+		}
+
+	} else {
+		tags = feature.properties.tags
+		if (tags['cycleway:separation']=="parking_lane") {
+			if (tags['oneway'] == 'yes') {
+				tags['cycleway:right:traffic_mode:left'] = "parking"
+			} else {
+				tags['cycleway:right:traffic_mode:left'] = "parking"
+				tags['cycleway:left:traffic_mode:left'] = "parking"
+			}
+			delete tags['cycleway:separation']
+			console.log(tags)
+		}
+
+		if (tags['cycleway:left:separation:left']=="parking_lane") {
+			tags['cycleway:left:traffic_mode:left'] = "parking"
+			delete tags['cycleway:left:separation:left']
+			console.log(tags)
+		}
+
+		if (tags['cycleway:right:separation:left']=="parking_lane") {
+			tags['cycleway:left:traffic_mode:left'] = "parking"
+			delete tags['cycleway:left:separation:left']
+			console.log(tags)
+		}
+
+		if (Object.keys(feature.properties.tags).includes("cycleway:both")) {
+			feature.properties.tags['cycleway'] = feature.properties.tags['cycleway:both']
+			delete feature.properties.tags['cycleway:both']
+		}
+
+		if (Object.keys(feature.properties.tags).includes("parking:lane:both")) {
+			feature.properties.tags['parking:lane:left'] = feature.properties.tags['parking:lane:both']
+			feature.properties.tags['parking:lane:right'] = feature.properties.tags['parking:lane:both']
+			delete feature.properties.tags['parking:lane:both']
+		}
+
+		if (Object.keys(feature.properties.tags).includes("parking:lane:both:parallel")) {
+			feature.properties.tags['parking:lane:left:parallel'] = feature.properties.tags['parking:lane:both:parallel']
+			feature.properties.tags['parking:lane:right:parallel'] = feature.properties.tags['parking:lane:both:parallel']
+			delete feature.properties.tags['parking:lane:both:parallel']
+		}
+
+		Object.keys(feature.properties.tags).forEach ( tag => {
+			if (document.getElementById(tag)) {
+				if (tag == "maxspeed") {
+					document.getElementById(tag).value = feature.properties.tags[tag].split(" ")[0]
+
+					if (feature.properties.tags[tag].split(" ")[1] == 'mph') {
+							$('#mphCheck').is(':checked')==true
+					}
+
+				} else {
+					// console.log(tag, feature.properties.tags[tag])
+					// https://stackoverflow.com/a/3544927 (colons can create issues in id because : is a pseudo selector in jQuery)
+					// $('#'+tag).val(feature.properties.tags[tag]).change()
+					if (tag.includes('width')) {
+						document.getElementById(tag).value = Number(String(feature.properties.tags[tag]).replace("'", ''))
+					} else {
+						document.getElementById(tag).value = feature.properties.tags[tag]
+					}
+				}
+			}
+
+
+		})
+	}
+
+	// feature = {'properties': {'tags': {'lanes': Number($('#lanes').val()), 'cycleway:left': $('#cycleway:left').val(), 'cycleway:right': $('#cycleway:right').val(), 'cycleway:right:separation:right': $('#cycleway:right:separation:right').val(), 'oneway': $('#oneway').val(), 'parking:lane:left': $('#parking:lane:left').val()}}}
+
+
+
+
+	if(Object.keys(feature.properties.tags).includes('name') == true) {
+		streetName = feature.properties.tags['name']
+	} else {
+		if(Object.keys(feature.properties.tags).includes('ref') == true) {
+			streetName = feature.properties.tags['ref']
+
+		} else {
+			streetName = feature.properties.tags['name'] = "Unnamed street"
+		}
+	}
+
+	// console.log(JSON.stringify(feature))
+	crossSectionInfo = generateCrossSectionTable(feature)
+	// console.log(crossSectionInfo)
+	offsetArray = crossSectionInfo['offsetArray']
+	// console.log(offsetArray)
+	html = "<center><div style='padding-top:5px;display:inline-block;background-color:#a9ccdb;border-left:7px solid red;border-right:7px solid blue'><div id='streetName' style='display:block;margin-bottom:20px;'>"+streetName+"</div>"+crossSectionInfo['html'] + "</div></center></div>"
+	$('#content').html(html);
+
+
+	widthPixels = $('.streetmix').width()
+	pixelsPerInch = 6 * multiplier
+	// console.log(widthPixels , pixelsPerInch)
+	totalWidth = Math.floor(widthPixels / pixelsPerInch) +"' "+Math.floor(((widthPixels / pixelsPerInch)-(Math.floor(widthPixels / pixelsPerInch)))*12)+'"'
+	// totalWidth=''
+	// document.getElementById('width:carriageway').value = Math.round(widthPixels / pixelsPerInch) + "'"
+	//feature.properties.tags['width:carriageway'] = document.getElementById('width:carriageway').value
+	var tagString = ''
+	// for (tag in Object.keys(feature.properties.tags)) {
+	// 	tagString += tag + "=" + feature.properties.tags[tag]
+	// }
+	Object.keys(feature.properties.tags).forEach(function(key) {
+    tagString += key + "=" + feature.properties.tags[key]+'\n';
+    // ...
+	});
+	html = "<pre>" + tagString + "</pre>"
+	$('#code').html(html);
+	$('#streetName').html($('#streetName').text() + " (" + Math.round(widthPixels / pixelsPerInch) +"')");
+
+
+
+}
+
+
+
+var offsetArray;
+
+function getWayData(id) {
+	$.get("https://www.openstreetmap.org/api/0.6/way/"+id+".json", function(osmDataAsJson) {
+		feature = {'properties': {'tags': {}}}
+		feature.properties.tags = osmDataAsJson['elements'][0]['tags']
+		wayLineString = turf.lineString(feature)
+		loadCrossSection(feature)
+
+		loadWay(id)
+		drawLanes(streetsAsGeojson)
+	});
+}
+
+
+
+function loadWay(id) {
+	if (typeof streetsAsGeojson == 'undefined'){
+		console.log('Querying OSM...')
+	$.get('https://overpass-api.de/api/interpreter?data=[timeout:250][out:json];way(id:'+id+');out geom;', function(osmDataAsJson) {
+		console.log(osmDataAsJson)
+
+		streetsAsGeojson = osmtogeojson(osmDataAsJson);
+		console.log(offsetArray)
+
+
+		// console.log((((offsetArray.at(-1)/2)-offsetArray.at(-1))*12))
+		// L.geoJson(turf.lineOffset(streetsAsGeojson['features'][0], (((offsetArray.at(-1)/2)-offsetArray.at(-1))*12), {units: 'inches'})).addTo(map)
+
+		var streetLayer = L.geoJson(streetsAsGeojson, {style: function(feature){ return {color:'yellow', dashArray:'30,10', opacity:0, interactive: false}}}).addTo(map);
+
+		map.fitBounds(streetLayer.getBounds());
+		console.log(streetsAsGeojson)
+		drawLanes(streetsAsGeojson)
+		calcStreetStats(streetsAsGeojson['features'][0])
+		return streetsAsGeojson;
+	});
+}
+}
+
+function drawLanes(streetsAsGeojson) {
+
+			map.removeLayer(lanesLayer)
+			lanesLayer.clearLayers()
+			lanesLayer = L.featureGroup().addTo(map);
+
+			if (typeof streetsAsGeojson !== 'undefined') {
+			for (i = 0; i < offsetArray.length; i++) {
+				// console.log((((offsetArray.at(-1)/2)-offsetArray[i])*12))
+				// console.log(streetsAsGeojson)
+				L.geoJson(getLineOffset(streetsAsGeojson['features'][0], (((offsetArray.at(-1)/2)-offsetArray[i]+Number($('#centerlineOffset').val()))*12), {units: 'inches'}), {
+					style: function(feature){
+						if (i==0 ) {
+							return {color:'red', interactive: false}
+						} else if (i == offsetArray.length-1) {
+							return {color:'blue', interactive: false}
+						} else {
+							return {color:'yellow', interactive: false}
+						}
+					}
+
+			}).addTo(lanesLayer)
+		}
+	}
+
+			lanesLayer.addTo(map);
+}
+
+
+function findGetParameter(parameterName) {
+    var result = null,
+        tmp = [];
+    var items = location.search.substr(1).split("&");
+    for (var index = 0; index < items.length; index++) {
+        tmp = items[index].split("=");
+        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+    }
+    return result;
+}
+
+
+
+function download(content, fileName, contentType) {
+    var a = document.createElement("a");
+    var file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
+		URL.revokeObjectURL(a.href)
+}
+
+function copyTextFunc(text) {
+  // Get the text field
+  // var copyText = document.getElementById("code");
+
+  // Select the text field
+  // copyText.select();
+  // copyText.setSelectionRange(0, 99999); // For mobile devices
+
+   // Copy the text inside the text field
+  navigator.clipboard.writeText(text);
+
+  // Alert the copied text
+  alert("Copied the text: " + text);
+}
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+	<link rel="manifest" href="img/site.webmanifest">
+	<title>Cycleway Stats</title>
+	<!-- https://gist.github.com/tyrasd/45e4a6a44c734497e82ccaae16a9c9ea -->
+	<!-- https://mapcomplete.osm.be/maxspeed.html?z=16&lat=41.49056&lon=-81.7087&language=en&welcome-control-toggle=true#welcome -->
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+	<link rel="stylesheet" href="css/main.css" />
+  <script src="js/helper.js"></script>
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+	<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+	<script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js"></script>
+	<script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+	<script src="js/html2canvas.min.js"></script>
+	<script src="js/leaflet_export.js"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+	<script src="https://kit.fontawesome.com/a7ec421c16.js" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+	<script src="js/leaflet.geometryutil.js"></script>
+	<script src="js/leaflet.almostover.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.1.6/Chart.bundle.js"></script>
+	<link rel="stylesheet" href="js/leaflet-search.css" />
+	<script src="js/leaflet-providers.js"></script>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+	<!-- CSS only -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+	<!-- JavaScript Bundle with Popper -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+	<script src="js/osmtostreetmix.js"></script>
+
+	<script src="js/calcstats.js"></script>
+<style>
+</style>
+</head>
+
+<body>
+	<!-- Modal -->
+	<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="exampleModalLabel">Please wait</h4>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<p id="modalText">Loading jurisdiction data...</p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModal2Label" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="exampleModal2Label"><span id="location-name"></span> Streets</h4>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div>
+
+					<div id="overpass-api-controls" class="leaflet-bar">
+						<table style="margin: 0 auto;">
+							<tr>
+								<td width="50%" style="height: 175px;">
+						<center>	<strong><u>Primary Streets</u></strong>
+						<br>
+						<div id="myChartDiv" style="width:125px;height:125px"> <span id="myChartDivload" style="display:none">Loading data...</span>
+							<canvas id="myChart" width="125" height="125"></canvas>
+						</div></center>
+					</td><td width="50%" style="height: 175px;">
+						<center><strong><u>Secondary Streets</u></strong>
+						<br>
+						<div id="myChart2Div" style="width:125px;height:125px"> <span id="myChartDiv2load" style="display:none">Loading data...</span>
+							<canvas id="myChart2" width="125" height="125"></canvas>
+						</div></center></td>
+					</tr><tr>
+						</tr><tr>
+						<td width="50%" style="height: 175px;">
+						<center><strong><u>Tertiary Streets</u></strong>
+						<br>
+						<div id="myChart3Div" style="width:125px;height:125px"> <span id="myChartDiv3load" style="display:none">Loading data...</span>
+							<canvas id="myChart3" width="125" height="125"></canvas>
+						</div></center>
+					</td><td width="50%" style="height: 175px;vertical-align: middle;">
+						<span style="display:inline-block;width:22px;height:14px;margin-right:10px"></span> <strong><u>Legend</u></strong>
+						<br> <span id='sepColor' style="display:inline-block;width:22px;height:14px;background-color:#2c7bb6;margin-right:10px"></span> <span>Separated lane</span>
+						<br> <span id='mixColor' style="display:inline-block;width:22px;height:14px;background-color:#ffffbf;margin-right:10px"></span> <span>Mixed lane</span>
+						<br> <span id='noColor' style="display:inline-block;width:22px;height:14px;background-color:#d7191c;margin-right:10px"></span> <span>Unmarked lane</span>
+						<br> <span style="display:inline-block;width:22px;height:14px;margin-right:10px"></span> <small><a target="_blank" href=""><i>What's the difference?</i></a></small>
+					</td></tr>
+						<!-- <input id="query-textfield" value="leisure=playground" size="50">
+	            <input id="query-button" type="button" value="Search"> -->
+						</table>
+					</div>
+				</div>
+				<div class="modal-body" id="exampleModal2Body"> </div>
+
+				<div class="modal-footer">
+					<!-- https://stackoverflow.com/a/56130779
+					<button type="button" class="btn btn-secondary" id="btnPrint">Print</button> -->
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div id="map">
+		<div class="leaflet-control-container" style="display:none">
+			<div class="leaflet-top leaflet-right">
+
+			</div>
+		</div>
+		<!-- <div class="leaflet-control-container">
+        <div class="leaflet-bottom leaflet-left">
+          <div id="overpass-api-controls-2" class="leaflet-bar">
+            <input id="query-textfield" value="leisure=playground" size="50">
+            <input id="query-button" type="button" value="Search">
+          </div>
+        </div>
+      </div> --></div>
+	<script>
+	colorRedGreen = ['#cc3300', '#ff781f', '#ffcc00', '#99cc33', '#339900']
+	colorsSafe = ['#d7191c', '#fdae61', '#fff343', '#abd9e9', '#2c7bb6']
+	// set the color profile
+	colors = colorsSafe
+
+	$('#sepColor').css({'background-color': colors[4]})
+	$('#mixColor').css({'background-color': colors[2]})
+	$('#noColor').css({'background-color': colors[0]})
+
+	var myModal = new bootstrap.Modal(document.getElementById('exampleModal'), {
+		keyboard: false
+	})
+	var myModal2 = new bootstrap.Modal(document.getElementById('exampleModal2'), {
+		keyboard: false
+	})
+	var map = L.map('map', {
+		zoomControl: false,
+		zoomSnap: 0.5,
+		almostOnMouseMove: false
+	}).setView([41.48850773250226, -81.70947558879621], 2);
+
+	L.control.zoom({
+    position: 'topright'
+}).addTo(map);
+	// var tileLayer = L.tileLayer('http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+	//   maxZoom: 19,
+	//   attribution: '&copy; <a href="http://openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	// }).addTo(map);
+	var CartoDB_DarkMatterNoLabels = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+		subdomains: 'abcd',
+		maxZoom: 18
+	}).addTo(map);
+	var Stamen_TonerLabels = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+		subdomains: 'abcd',
+		maxZoom: 18,
+		ext: 'png'
+	}).addTo(map);
+	// var CartoDB_DarkMatter = L.tileLayer('https://gis.cuyahogacounty.us/server/rest/services/IMAGERY/2021_Fall_Aerial/MapServer/tile/{z}/{x}/{y}.png').addTo(map);
+	var streetLayer = L.geoJson({
+		"type": "FeatureCollection",
+		"features": []
+	}).addTo(map)
+	var boundaryLayer = L.geoJson({
+		"type": "FeatureCollection",
+		"features": []
+	}).addTo(map)
+
+
+	function buildOverpassApiUrlRoadways(map, overpassQuery, id) {
+		var query = '?data=[out:json][timeout:300];area(' + id.toString() + ')->.searchArea;(way["highway"="residential"](area.searchArea);way["highway"="tertiary"](area.searchArea);way["highway"="secondary"](area.searchArea);way["highway"="primary"](area.searchArea);way["highway"="unclassified"](area.searchArea);way["highway"~"^(footway|path)$"]["bicycle"~"^(yes|designated)$"](area.searchArea);way["highway"="cycleway"](area.searchArea);way["highway"="trunk"](area.searchArea);way["highway"="primary_link"](area.searchArea);way["highway"="secondary_link"](area.searchArea);way["highway"="tertiary_link"](area.searchArea););out geom;';
+		var baseUrl = 'https://overpass.kumi.systems/api/interpreter';
+		// var baseUrl = 'https://overpass-api.de/api/interpreter';
+		var resultUrl = baseUrl + query;
+		return resultUrl;
+	}
+
+	var chartId = 0;
+	function loadOSMData(id, name) {
+    var timer = 0
+    var timerFunction = setInterval(function() {
+      timer = (Math.round((timer + Number.EPSILON) * 10) / 10)
+      document.getElementById('modalText').innerHTML = 'Loading street data from ' + name + '...<br>'+timer+'sec';
+      timer += 0.1
+    }, 100);
+
+		var queryTextfieldValue = $("#query-textfield").val();
+		document.getElementById('myChart').style.display = "none"
+		document.getElementById('myChart2').style.display = "none"
+		document.getElementById('myChart3').style.display = "none"
+		document.getElementById('myChartDivload').style.display = "inline"
+		document.getElementById('myChartDiv2load').style.display = "inline"
+		document.getElementById('myChartDiv3load').style.display = "inline"
+
+
+
+		var overpassApiUrl = buildOverpassApiUrlRoadways(map, queryTextfieldValue, id);
+		$.get(overpassApiUrl, function(osmDataAsJson) {
+
+
+
+			var streetsAsGeojson = osmtogeojson(osmDataAsJson);
+			// console.log(boundaryAsGeojson)
+			if(boundaryAsGeojson['features'][0].geometry.type == 'MultiPolygon') {
+				var boundaryPolygon = turf.multiPolygon(boundaryAsGeojson['features'][0].geometry.coordinates);
+			} else {
+				var boundaryPolygon = turf.polygon(boundaryAsGeojson['features'][0].geometry.coordinates);
+			}
+
+			function resetHighlight(e) {
+					streetLayer.resetStyle(e.target);
+					// info.update();
+				}
+
+			var streetLayer = L.geoJson(streetsAsGeojson, {
+				style: function(feature) {
+					// set default color
+					var colorHex = colors[0];
+					var lineWeight = 5;
+					var opacity = 1;
+					// get speed limit, set default very high only for calculations
+					var maxspeed = 100;
+					var dashArrayStr = '1'
+					// set default lane count
+					if(Object.keys(feature.properties.tags).includes('oneway')) {
+						if(feature.properties.tags['oneway'] == 'yes') {
+							var numLanes = 1;
+						}
+					} else {
+            var numLanes = 2;
+          }
+
+					if (Object.keys(feature.properties.tags).includes('maxspeed') == true) {
+            if (feature.properties.tags['maxspeed'].includes('mph')) {
+  						maxspeed = Number(feature.properties.tags['maxspeed'].split(" ")[0])
+  					} else {
+  						maxspeed = feature.properties.tags['maxspeed'] / 0.621371
+  					}
+          }
+
+					if((Object.keys(feature.properties.tags).includes('cycleway') == false && Object.keys(feature.properties.tags).includes('cycleway:right') == false && Object.keys(feature.properties.tags).includes('cycleway:left') == false && Object.keys(feature.properties.tags).includes('cycleway:both') == false) || (Object.keys(feature.properties.tags).includes('cycleway') == true && feature.properties.tags['cycleway'] == 'no')) {
+						colorHex = colors[0]; // red
+          }
+
+						if(feature.properties.tags['highway'] == "primary" || feature.properties.tags['highway'] == "primary_link" || feature.properties.tags['highway'] == "trunk") {
+							lineWeight = 5;
+						} else if(feature.properties.tags['highway'] == "secondary" || feature.properties.tags['highway'] == "secondary_link") {
+							lineWeight = 4;
+						} else if(feature.properties.tags['highway'] == "tertiary" || feature.properties.tags['highway'] == "cycleway" || feature.properties.tags['highway'] == "tertiary_link" || (feature.properties.tags['highway'] == 'footway' && feature.properties.tags['bicycle'] == 'yes') || (feature.properties.tags['highway']=='path' && (feature.properties.tags['bicycle']=='designated' || feature.properties.tags['bicycle']=='yes'))) {
+							lineWeight = 3;
+						} else {
+							lineWeight = 2;
+							colorHex = colors[3]; // green
+              colorHex = "#444444";
+							opacity = 0.01
+							dashArrayStr = '10,10'
+						}
+
+
+					if((feature.properties.tags['cycleway'] == "shared_lane" || feature.properties.tags['cycleway'] == "shared_bus") && maxspeed > 25) {
+						colorHex = colors[1];
+					} else if((feature.properties.tags['cycleway:right'] == "shared_lane" || feature.properties.tags['cycleway:right'] == "shared_bus") && maxspeed > 25) {
+						colorHex = colors[1];
+					} else if((feature.properties.tags['cycleway:left'] == "shared_lane" || feature.properties.tags['cycleway:left'] == "shared_bus") && maxspeed > 25) {
+						colorHex = colors[1];
+					} else if((feature.properties.tags['cycleway:both'] == "shared_lane" || feature.properties.tags['cycleway:both'] == "shared_bus") && maxspeed > 25) {
+						colorHex = colors[1];
+					} else if((feature.properties.tags['cycleway'] == "shared_lane" || feature.properties.tags['cycleway'] == "shared_bus") && maxspeed == 25) {
+						colorHex = colors[2];
+					} else if((feature.properties.tags['cycleway:right'] == "shared_lane" || feature.properties.tags['cycleway:right'] == "shared_bus") && maxspeed == 25) {
+						colorHex = colors[2];
+					} else if((feature.properties.tags['cycleway:left'] == "shared_lane" || feature.properties.tags['cycleway:left'] == "shared_bus") && maxspeed == 25) {
+						colorHex = colors[2];
+					} else if((feature.properties.tags['cycleway:both'] == "shared_lane" || feature.properties.tags['cycleway:both'] == "shared_bus") && maxspeed == 25) {
+						colorHex = colors[2];
+					} else if((feature.properties.tags['cycleway'] == "shared_lane" || feature.properties.tags['cycleway'] == "shared_bus") && maxspeed < 25) {
+						colorHex = colors[3];
+					} else if((feature.properties.tags['cycleway:right'] == "shared_lane" || feature.properties.tags['cycleway:right'] == "shared_bus") && maxspeed < 25) {
+						colorHex = colors[3];
+					} else if((feature.properties.tags['cycleway:left'] == "shared_lane" || feature.properties.tags['cycleway:left'] == "shared_bus") && maxspeed < 25) {
+						colorHex = colors[3];
+					} else if((feature.properties.tags['cycleway:both'] == "shared_lane" || feature.properties.tags['cycleway:both'] == "shared_bus") && maxspeed < 25) {
+						colorHex = colors[3];
+					} else if(feature.properties.tags['cycleway'] == "lane" || feature.properties.tags['cycleway'] == "track") { // add a (bicycle=yes && motor_vehicle=no) condition
+						colorHex = colors[3];
+						opacity = 1
+						dashArrayStr='1'
+					} else if(feature.properties.tags['cycleway:left'] == "lane" || feature.properties.tags['cycleway:left'] == "track") {
+						colorHex = colors[3];
+						opacity = 1
+						dashArrayStr='1'
+					} else if(feature.properties.tags['cycleway:right'] == "lane" || feature.properties.tags['cycleway:right'] == "track") {
+						colorHex = colors[3];
+						opacity = 1
+						dashArrayStr='1'
+					} else if(feature.properties.tags['cycleway:both'] == "lane" || feature.properties.tags['cycleway:both'] == "track") {
+						colorHex = colors[3];
+						opacity = 1
+						dashArrayStr='1'
+					} else if(feature.properties.tags['highway'] == "cycleway" || feature.properties.tags['cycleway'] == "separate" || feature.properties.tags['cycleway:right'] == "separate" || feature.properties.tags['cycleway:left'] == "separate" || feature.properties.tags['cycleway:both'] == "separate" || feature.properties.tags['bicycle'] == 'use_sidepath' || (feature.properties.tags['highway'] == 'footway' && feature.properties.tags['bicycle'] == 'yes') || (feature.properties.tags['highway']=='path' && (feature.properties.tags['bicycle']=='designated' || feature.properties.tags['bicycle']=='yes'))) {
+						colorHex = colors[4];
+					} else {
+						//colorHex = colors[0];
+					}
+
+					if(Object.keys(feature.properties.tags).includes('bicycle') == true && Object.keys(feature.properties.tags).includes('motor_vehicle') == true) {
+						if(feature.properties.tags['bicycle'] == 'yes' && feature.properties.tags['motor_vehicle'] == 'no') {
+							colorHex = colors[4]; // if cars banned and bicycles allowed
+						}
+					}
+
+
+
+					return {
+						color: colorHex,
+						weight: lineWeight,
+						opacity: opacity,
+						dashArray: dashArrayStr
+
+					};
+				},
+				filter: function(feature, layer) {
+					// if ((feature.properties.tags['highway']=='residential' || feature.properties.tags['highway']=='unclassified' || feature.properties.tags['highway']=='service') && Object.keys(feature.properties.tags).includes('cycleway') == false) {
+					//   return false;
+					// }
+
+
+					var isPolygon = (feature.geometry) && (feature.geometry.type !== undefined) && (feature.geometry.type === "Polygon");
+					if(isPolygon) {
+						feature.geometry.type = "Point";
+						var polygonCenter = L.latLngBounds(feature.geometry.coordinates[0]).getCenter();
+						feature.geometry.coordinates = [polygonCenter.lat, polygonCenter.lng];
+					}
+					if(feature.geometry.type != "Point" && feature.geometry.type != "Polygon" && feature.geometry.type != "MultiPolygon") {
+						if(turf.booleanPointInPolygon(turf.point(feature.geometry.coordinates[0]), boundaryPolygon) == false || turf.booleanPointInPolygon(turf.point(feature.geometry.coordinates.at(-1)), boundaryPolygon) == false) {
+							featureLine = turf.lineString(feature.geometry.coordinates)
+								// console.log('lineIntersect: ',turf.lineIntersect(feature, boundaryPolygon))
+							lineIntersect = turf.lineIntersect(feature, boundaryPolygon)
+              // if (feature.properties.tags['name'] == 'Lost Nation Road') {
+              if (lineIntersect.features.length > 1) {
+                // console.log('feature:', feature)
+                // console.log(lineIntersect)
+                // create a new MultiLineString entity
+                var newMultiLine = [];
+
+                var splitPts = [feature.geometry.coordinates[0]]
+                lineIntersect.features.forEach((splitedPt, i) => {
+                  splitPts.push(splitedPt.geometry.coordinates)
+                })
+                splitPts.push(feature.geometry.coordinates.at(-1))
+
+                // now chop up feature line into components, and check if midpoint and end points are within the boundary
+                // console.log('splitPts: ',splitPts)
+                splitPts.forEach((splitPt, i) => {
+                  if (i < (splitPts.length-1)) {
+                  //  console.log(i, turf.point(splitPts[i]), turf.point(splitPts[i+1]))
+                    splitLine = turf.lineSlice(turf.point(splitPts[i]), turf.point(splitPts[i+1]), feature)
+                   // console.log('splitLine: ',splitLine)
+
+                    // get two points that aren't the end points, but just inside
+                    startDist = turf.length(splitLine)*0.3
+                    endDist = turf.length(splitLine)*0.7
+                    // console.log('startDist,endDist:', startDist,endDist)
+                    startPt = turf.along(splitLine, startDist)
+                    endPt = turf.along(splitLine, endDist)
+
+                    // console.log('distanceToPolygon:',distanceToPolygon({point: startPt, polygon: boundaryPolygon}))
+                    // console.log('distanceToPolygon:',distanceToPolygon({point: endPt, polygon: boundaryPolygon}))
+
+                    // boundaryLine = turf.polygonToLine(boundaryPolygon)
+                    // console.log(turf.pointToLineDistance(startPt,boundaryLine), turf.pointToLineDistance(endPt,boundaryLine))
+                    // console.log('boundaryLine: ',boundaryLine)
+
+
+                    if (distanceToPolygon({point: startPt, polygon: boundaryPolygon}) < 10 && distanceToPolygon({point: endPt, polygon: boundaryPolygon}) < 10 || (turf.booleanPointInPolygon(startPt, boundaryPolygon) == true || turf.booleanPointInPolygon(endPt, boundaryPolygon) == true)) {
+
+                    //if (turf.pointToLineDistance(startPt,boundaryLine) < 0.005 && turf.pointToLineDistance(endPt,boundaryLine) < 0.005 || (turf.booleanPointInPolygon(startPt, boundaryPolygon) == true || turf.booleanPointInPolygon(endPt, boundaryPolygon) == true)) {
+
+                    //if(turf.booleanPointInPolygon(startPt, boundaryPolygon) == true || turf.booleanPointInPolygon(endPt, boundaryPolygon) == true) {
+                      // line segment is within the polygon
+                      newMultiLine.push(splitLine.geometry.coordinates)
+                      // console.log('splitLine inside: ', splitLine)
+                    } else {
+                      // console.log('splitLine outside: ', splitLine)
+                    }
+
+                  }
+                })
+
+                // console.log('newMultiLine: ',newMultiLine)
+                if (newMultiLine.length == 1) {
+                  feature.geometry = turf.lineString(newMultiLine[0]).geometry
+                  return true;
+                } else if (newMultiLine.length > 1) {
+                  feature.geometry = turf.multiLineString(newMultiLine).geometry
+                  return true;
+                }
+                // console.log('feature: ', feature)
+
+
+              } else
+							if(lineIntersect.features.length == 1) {
+								//console.log(lineIntersect)
+								intersectionPoint = turf.point(lineIntersect.features[0].geometry.coordinates)
+								if(turf.booleanPointInPolygon(turf.point(feature.geometry.coordinates[0]), boundaryPolygon) == true) {
+									// use the first point as the start point, and the intersection point at the stop point
+									interiorLine = turf.lineSlice(turf.point(feature.geometry.coordinates[0]), intersectionPoint, featureLine)
+								} else {
+									// console.log('-1: ', feature.geometry.coordinates.at(-1))
+									// console.log('intersectionPt: ', intersectionPoint)
+									interiorLine = turf.lineSlice(turf.point(feature.geometry.coordinates.at(-1)), intersectionPoint, featureLine)
+								}
+								feature.geometry = interiorLine.geometry;
+								// console.log(feature.properties)
+								return true
+							}
+						} else {
+							return true
+						}
+					}
+				},
+				onEachFeature: function(feature, layer) {
+					layer.on({
+						mouseover: highlightFeature,
+						mouseout: resetHighlight
+					});
+
+					var popupContent = "";
+					popupContent = popupContent + "<b>osm_id</b>: <a target='_blank' href='https://www.openstreetmap.org/" + feature.properties.type + "/" + feature.properties.id + "'>" + feature.properties.type + "/" + feature.properties.id + "</a><br>";
+					var keys = Object.keys(feature.properties.tags);
+					keys.forEach(function(key) {
+						if(key.includes('tiger') == false && key.includes('hgv') == false && key.includes('source') == false && key.includes('old_ref') == false) {
+							popupContent = popupContent + "<b>" + key + "</b>: " + feature.properties.tags[key] + "<br>";
+						}
+					});
+
+					tableHtml = "<center>"+generateCrossSectionTable(feature)['html']+"</center>";
+					popupContent = tableHtml+popupContent
+
+					layer.bindPopup(popupContent);
+
+
+					calcStreetStats(feature)
+				}
+			}).addTo(map);
+
+			myModal.hide();
+			$('.info').show();
+
+			map.almostOver.addLayer(streetLayer);
+
+			console.log(streetStats)
+			streetsWithoutBikeInfraSorted = {
+				'primary': Object.fromEntries(Object.entries(streetsWithoutBikeInfra.primary).sort(([, a], [, b]) => a - b).reverse()),
+				'secondary': Object.fromEntries(Object.entries(streetsWithoutBikeInfra.secondary).sort(([, a], [, b]) => a - b).reverse()),
+				'tertiary': Object.fromEntries(Object.entries(streetsWithoutBikeInfra.tertiary).sort(([, a], [, b]) => a - b).reverse())
+			}
+			// console.log(streetsWithoutBikeInfraSorted)
+
+			$('#exampleModal2Body').html('')
+			calcBikeAutoRatio = (streetStats.total_shared_lane + streetStats.total_bike_lane + streetStats.total_cycleway_highway - streetStats.total_separated_cycleway) / (streetStats.primary + streetStats.secondary + streetStats.tertiary)
+			calcBikeAutoRatio = (Math.round((calcBikeAutoRatio + Number.EPSILON) * 100))
+
+			if (calcBikeAutoRatio=="Infinity") {
+				calcBikeAutoRatio="&infin;"
+			}
+			// console.log(streetStats.total_shared_lane, streetStats.total_bike_lane, streetStats.total_cycleway_highway, streetStats.total_separated_cycleway)
+			totalBikeSpace = (streetStats.total_shared_lane + streetStats.total_bike_lane + streetStats.total_cycleway_highway - streetStats.total_separated_cycleway).toFixed(1)
+			totalStreetSpace = (streetStats.primary + streetStats.secondary + streetStats.tertiary).toFixed(1)
+			var text = '<h5>Bike lane length &#247; Street length: <u>' + calcBikeAutoRatio + '%</u></h5><div class="alert alert-info" role="alert"><p>This metric compares the total length of all routes provided for bicycles (including off-road paths) to all non-residential street routes for all vehicles.</p><p>'+totalBikeSpace+' [total bicycle routes] &#247; '+totalStreetSpace+' [total street routes] = <b><u>'+calcBikeAutoRatio+'%</u></b></p><p>Values >75% may suggest safer and lower-stress mobility networks, even if the charts show lower values. <a target="_blank" href="more"><i>Learn more...</i></a></p></div><hr><p></p>';
+
+			text += '<div class="alert alert-warning alert-dismissible" role="alert">Statistics are calculated from OpenStreetMap (OSM) data. OSM data may be incomplete. This map can help you locate and update missing data!<br><a target="_blank" href="more"><i>Learn more about common mapping issues...</i></a><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
+
+			text += "<h4><u><i>All Major Streets (" + (Math.round((streetStats.primary_no_bikeinfra + streetStats.secondary_no_bikeinfra + streetStats.tertiary_no_bikeinfra + Number.EPSILON) * 10) / 10) + "mi remaining)</i></u></h4>"
+
+			obj = streetsWithoutBikeInfraSorted.primary
+			text += "<h5>Primary Streets (" + (Math.round((streetStats.primary_no_bikeinfra + Number.EPSILON) * 10) / 10) + "mi remaining)</h5>"
+
+      if (streetStats.primary_no_bikeinfra > 0) {
+  			text += '<div class="progress">  <div class="progress-bar bg-success" role="progressbar" aria-label="Segment one" style="background-color:'+colors[4]+' !important;width: ' + ((streetStats.primary_cyclelane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.primary_cyclelane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.primary_cyclelane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div>  <div class="progress-bar bg-warning progress-bar-striped" role="progressbar" aria-label="Segment two" style="color:black;background-color:'+colors[2]+' !important;width: ' + ((streetStats.primary_sharedlane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.primary_sharedlane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.primary_sharedlane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div>  <div class="progress-bar bg-danger" role="progressbar" aria-label="Segment three" style="background-color:'+colors[0]+' !important;width: ' + ((streetStats.primary_no_bikeinfra) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.primary_no_bikeinfra) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.primary_no_bikeinfra) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div></div><div class="alert alert-danger" role="alert">'
+  			Object.keys(obj).forEach(key => {
+  				// console.log(key, obj[key]);
+  				length = (Math.round((obj[key] + Number.EPSILON) * 10) / 10)
+  				if(length == 0) {
+  					length = 0.05
+  				}
+					if (key != '(no name)') {
+	  				keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B~%22^(name|ref)$%22~%22" + key + "%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22.*%22%5D%5B%22highway%22!~%22cycleway|residential%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+					} else {
+						keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B!%22name%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22primary|primary_link|trunk|trunk_link%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+					}
+
+  				pctLength = (Math.round(((length / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra)) + Number.EPSILON) * 100))
+  				text += keyLink + "</a>: " + length + " mi (" + pctLength + "%)"
+					text += " <a target='_blank' href='repair.html?area=36"+osm_id.toString().padStart(8, '0')+"&name=" + key + "'></a>"
+					text += "<br>"
+  			});
+      }
+
+			text += "</div><br><hr><h5>Secondary Streets (" + (Math.round((streetStats.secondary_no_bikeinfra + Number.EPSILON) * 10) / 10) + "mi remaining)</h5>"
+
+      if (streetStats.secondary_no_bikeinfra > 0) {
+  			text += '<div class="progress">  <div class="progress-bar bg-success" role="progressbar" aria-label="Segment one" style="background-color:'+colors[4]+' !important;width: ' + ((streetStats.secondary_cyclelane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.secondary_cyclelane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.secondary_cyclelane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div>  <div class="progress-bar bg-warning progress-bar-striped" role="progressbar" aria-label="Segment two" style="color:black;background-color:'+colors[2]+' !important;width: ' + ((streetStats.secondary_sharedlane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.secondary_sharedlane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.secondary_sharedlane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div>  <div class="progress-bar bg-danger" role="progressbar" aria-label="Segment three" style="background-color:'+colors[0]+' !important;width: ' + ((streetStats.secondary_no_bikeinfra) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.secondary_no_bikeinfra) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.secondary_no_bikeinfra) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div></div><div class="alert alert-danger" role="alert">'
+  			obj = streetsWithoutBikeInfraSorted.secondary
+  			Object.keys(obj).forEach(key => {
+  				length = (Math.round((obj[key] + Number.EPSILON) * 10) / 10)
+  				if(length == 0) {
+  					length = 0.05
+  				}
+					if (key != '(no name)') {
+	  				keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B~%22^(name|ref)$%22~%22" + key + "%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22.*%22%5D%5B%22highway%22!~%22cycleway|residential%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+					} else {
+						keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B!%22name%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22secondary|secondary_link%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+					}
+
+					pctLength = (Math.round(((length / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra)) + Number.EPSILON) * 100))
+					text += keyLink + "</a>: " + length + " mi (" + pctLength + "%)"
+					text += " <a target='_blank' href='repair.html?area=36"+osm_id.toString().padStart(8, '0')+"&name=" + key + "'></a>"
+					text += "<br>"
+  			});
+      }
+
+			text += "</div><br><hr><h5>Tertiary Streets (" + (Math.round((streetStats.tertiary_no_bikeinfra + Number.EPSILON) * 10) / 10) + "mi remaining)</h5>"
+
+      if (streetStats.tertiary_no_bikeinfra > 0) {
+  			text += '<div class="progress">  <div class="progress-bar bg-success" role="progressbar" aria-label="Segment one" style="background-color:'+colors[4]+' !important;width: ' + ((streetStats.tertiary_cyclelane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.tertiary_cyclelane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.tertiary_cyclelane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div>  <div class="progress-bar bg-warning progress-bar-striped" role="progressbar" aria-label="Segment two" style="color:black;background-color:'+colors[2]+' !important;width: ' + ((streetStats.tertiary_sharedlane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.tertiary_sharedlane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.tertiary_sharedlane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div>  <div class="progress-bar bg-danger" role="progressbar" aria-label="Segment three" style="background-color:'+colors[0]+' !important;width: ' + ((streetStats.tertiary_no_bikeinfra) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + '%" aria-valuenow="' + ((streetStats.tertiary_no_bikeinfra) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + '" aria-valuemin="0" aria-valuemax="100">' + (Math.round((((streetStats.tertiary_no_bikeinfra) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100) + Number.EPSILON) * 10) / 10) + '%</div></div><div class="alert alert-danger" role="alert">'
+  			obj = streetsWithoutBikeInfraSorted.tertiary
+  			Object.keys(obj).forEach(key => {
+  				length = (Math.round((obj[key] + Number.EPSILON) * 10) / 10)
+  				if(length == 0) {
+  					length = 0.05
+  				}
+					if (key != '(no name)') {
+	  				keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B~%22^(name|ref)$%22~%22" + key + "%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22.*%22%5D%5B%22highway%22!~%22cycleway|residential%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+					} else {
+						keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B!%22name%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22tertiary|tertiary_link%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+					}
+
+					pctLength = (Math.round(((length / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra)) + Number.EPSILON) * 100))
+					text += keyLink + "</a>: " + length + " mi (" + pctLength + "%)"
+					text += " <a target='_blank' href='repair.html?area=36"+osm_id.toString().padStart(8, '0')+"&name=" + key + "'></a>"
+					text += "<br>"
+  			});
+      }
+			text += '</div>'
+
+			$('#exampleModal2Body').html(text)
+
+			function drawChart(ctxElement, ctxType, ctxDataLabels, ctxDataSets, midLabel, id) {
+				// Chart.getChart(ctxElement).destroy();
+				// console.log(ctxElement.id)
+				chartId += 1;
+				ctxElement.remove();
+				g = document.createElement('canvas');
+				g.setAttribute("id", ctxElement.id);
+				g.setAttribute("width", "125");
+				g.setAttribute("height", "125");
+				document.getElementById(ctxElement.id + "Div").append(g);
+				var ctx = g;
+				var data = {
+					labels: ctxDataLabels,
+					datasets: ctxDataSets
+				};
+				Chart.pluginService.register({
+					afterDatasetsDraw: function(chart) {
+						// console.log(chart.id, id)
+						if(chart.id != id) return;
+						var width = chart.chart.width,
+							height = chart.chart.height,
+							ctx = chart.chart.ctx;
+						// ctx.restore();
+						var fontSize = (height / 100).toFixed(2);
+						ctx.font = "bold " + fontSize + "em sans-serif";
+						ctx.fillStyle = "black";
+						ctx.textBaseline = "middle";
+						// console.log(typeof midLabel, midLabel)
+						if(typeof midLabel == 'undefined' || midLabel == 'NaN%') {
+							midLabel = "None"
+						}
+						var text = midLabel,
+							textX = Math.round((width - ctx.measureText(text).width) / 2),
+							textY = (height / 2) + 3;
+						ctx.fillText(text, textX, textY);
+						ctx.save();
+					}
+				});
+				// console.log(ctx);
+				var chart = new Chart(ctx, {
+					type: ctxType,
+					data: data,
+					options: {
+						legend: {
+							display: false
+						},
+						responsive: true,
+						layout: {
+							padding: {}
+						}
+					}
+				});
+				// console.log(chart)
+			};
+			drawChart(document.getElementById("myChart"), "doughnut", ["Lane (mi)", "Sharrow (mi)", "None (mi)"], [{
+				data: [streetStats.primary_cyclelane.toFixed(1), streetStats.primary_sharedlane.toFixed(1), streetStats.primary_no_bikeinfra.toFixed(1)],
+				backgroundColor: [colors[4], colors[2], colors[0]],
+				hoverBackgroundColor: [colors[4], colors[2], colors[0]]
+			}], ((streetStats.primary_cyclelane + streetStats.primary_sharedlane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100).toFixed(1).toString() + "%", chartId);
+			drawChart(document.getElementById("myChart2"), "doughnut", ["Lane (mi)", "Sharrow (mi)", "None (mi)"], [{
+				data: [streetStats.secondary_cyclelane.toFixed(1), streetStats.secondary_sharedlane.toFixed(1), streetStats.secondary_no_bikeinfra.toFixed(1)],
+				backgroundColor: [colors[4], colors[2], colors[0]],
+				hoverBackgroundColor: [colors[4], colors[2], colors[0]]
+			}], ((streetStats.secondary_cyclelane + streetStats.secondary_sharedlane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100).toFixed(1) + "%", chartId);
+			drawChart(document.getElementById("myChart3"), "doughnut", ["Lane (mi)", "Sharrow (mi)", "None (mi)"], [{
+				data: [streetStats.tertiary_cyclelane.toFixed(1), streetStats.tertiary_sharedlane.toFixed(1), streetStats.tertiary_no_bikeinfra.toFixed(1)],
+				backgroundColor: [colors[4], colors[2], colors[0]],
+				hoverBackgroundColor: [colors[4], colors[2], colors[0]]
+			}], ((streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100).toFixed(1) + "%", chartId);
+			document.getElementById('myChartDivload').style.display = "none"
+			document.getElementById('myChartDiv2load').style.display = "none"
+			document.getElementById('myChartDiv3load').style.display = "none"
+		}).fail(function() {
+      clearInterval(timerFunction);
+			myModal.hide();
+			alert("OpenStreetMap didn't return data. Please try again!");
+		}).done(function() {
+      clearInterval(timerFunction);
+			infoBtn.button.style.backgroundColor = 'yellow';
+			console.log(((streetStats.primary_cyclelane + streetStats.primary_sharedlane) / (streetStats.primary_cyclelane + streetStats.primary_sharedlane + streetStats.primary_no_bikeinfra) * 100).toFixed(1).toString()+","+((streetStats.secondary_cyclelane + streetStats.secondary_sharedlane) / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra) * 100).toFixed(1)+","+((streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane) / (streetStats.tertiary_cyclelane + streetStats.tertiary_sharedlane + streetStats.tertiary_no_bikeinfra) * 100).toFixed(1)+","+calcBikeAutoRatio)
+    });
+
+
+	};
+
+	var boundaryAsGeojson;
+
+	function analyzeLocation(lat, lng, searchName) {
+		infoBtn.button.style.backgroundColor = 'white';
+
+		myModal.show()
+		document.getElementById('modalText').innerHTML = 'Loading jurisdiction data...';
+
+    var timer = 0
+    // document.getElementById('modalText').innerHTML = 'Loading street data from ' + name + '...';
+    var timerFunction = setInterval(function() {
+      timer = (Math.round((timer + Number.EPSILON) * 10) / 10)
+      document.getElementById('modalText').innerHTML = 'Loading jurisdiction data...<br>'+timer+'sec';
+      timer += 0.1
+      // element.innerHTML += "Hello"
+    }, 100);
+
+
+		document.getElementById("searchtext21").blur();
+		osm_id = searchName.split(', OSM_id: ').at(-1)
+		map.eachLayer(function(layer) {
+			if(layer !== CartoDB_DarkMatterNoLabels && layer !== Stamen_TonerLabels) {
+				map.removeLayer(layer);
+			}
+		});
+		var level = 8;
+		// var [lat, lng, level] = [41.5010,-81.6929,8]
+		var query = '?data=[out:json][timeout:300];rel(' + osm_id.toString() + ');out geom;';
+		var baseUrl = 'https://overpass.kumi.systems/api/interpreter';
+		// var baseUrl = 'https://overpass-api.de/api/interpreter';
+		var overpassApiUrl = baseUrl + query;
+		$.get(overpassApiUrl, function(osmDataAsJson) {
+			document.getElementById('location-name').innerHTML = osmDataAsJson['elements'][0]['tags']['name'];
+			sluggedname = string_to_slug(osmDataAsJson['elements'][0]['tags']['name'])
+			if(sluggedname == '' && Object.keys(osmDataAsJson['elements'][0]['tags']).includes('name:en')) {
+				sluggedname = string_to_slug(osmDataAsJson['elements'][0]['tags']['name:en'])
+			}
+			if(history.pushState) {
+				history.pushState(null, null, '#' + sluggedname + "-" + osm_id);
+			} else {
+				location.hash = '#' + sluggedname + "-" + osm_id;
+			}
+			boundaryAsGeojson = osmtogeojson(osmDataAsJson);
+			// console.log(boundaryAsGeojson)
+			var boundaryLayer = L.geoJson(boundaryAsGeojson, {
+				style: function(feature) {
+					// set default color
+					return {
+						color: 'white',
+						weight: 3,
+						fillColor: 'black',
+						dashArray: '10,10',
+						dashOffset: '0'
+					};
+				},
+				filter: function(feature, layer) {
+					var isPolygon = (feature.geometry) && (feature.geometry.type !== undefined) && (feature.geometry.type === "Polygon" || feature.geometry.type === "MultiPolygon");
+					if(isPolygon) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+			}).addTo(map);
+
+			 streetStats = {
+				'total_shared_lane': 0,
+				'total_bike_lane': 0,
+				'total_separated_cycleway': 0,
+				'total_cycleway_highway': 0,
+				'total_residential_etc': 0,
+				'shared_25': 0,
+				'shared_35': 0,
+				'primary': 0,
+				'secondary': 0,
+				'tertiary': 0,
+				'primary_no_bikeinfra': 0,
+				'secondary_no_bikeinfra': 0,
+				'tertiary_no_bikeinfra': 0,
+				'primary_cyclelane': 0,
+				'secondary_cyclelane': 0,
+				'tertiary_cyclelane': 0,
+				'residential_cyclelane': 0,
+				'primary_sharedlane': 0,
+				'secondary_sharedlane': 0,
+				'tertiary_sharedlane': 0,
+				'residential_sharedlane': 0
+			}
+			 streetsWithoutBikeInfra = {
+				'primary': { '(no name)': 0 },
+				'secondary': { '(no name)': 0 },
+				'tertiary': { '(no name)': 0 }
+			}
+
+			loadOSMData('36' + osm_id.toString().padStart(8, '0'), osmDataAsJson['elements'][0]['tags']['name']);
+			map.fitBounds(boundaryLayer.getBounds());
+			document.getElementById("searchtext21").blur();
+			// }
+		}).fail(function() {
+			myModal.hide();
+      clearInterval(timerFunction);
+			alert("OpenStreetMap didn't return data. Please try again!");
+		}).done(function() {
+      clearInterval(timerFunction);
+
+    });;;
+	}
+	//window.onload = loadOSMData();
+	map.on('almost:click', function(e) {
+		var layer = e.layer;
+		if(layer.openPopup) {
+			layer.fire('click', e);
+		}
+	});
+
+	map.on('almost:mouseover', function(e) {
+		var layer = e.layer;
+		layer.on({
+			mouseover: highlightFeature,
+			mouseout: resetHighlight
+		});
+	});
+
+
+
+	function getStreetLineStringWithinBoundary(streetGeojson) {
+		console.log(streetGeojson);
+		console.log(boundaryAsGeojson['features'][0]);
+		console.log(overlapping);
+		console.log(overlapping.geometry);
+		return overlapping;
+	}
+	// analyzeLocation(39.7589478, -84.1916069)
+	</script>
+	<script src="js/leaflet-search.js"></script>
+	<script>
+	map.addControl(new L.Control.Search({
+		url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}&limit=5',
+		//url: 'https://search.osmnames.org/q/{s}.js?key=uzaFSBbfgFUp5zcijcSu',
+		jsonpParam: 'json_callback',
+		propertyName: 'display_name',
+		propertyLoc: ['lat', 'lon'],
+		autoCollapse: true,
+		autoCollapseTime: 300,
+		autoType: false,
+		minLength: 2,
+		collapsed: true,
+		formatData: formatJSON,
+		textPlaceholder: 'Search city or county'
+	}));
+
+	function formatJSON(rawjson) { //callback that remap fields name
+		// console.log(rawjson)
+		var json = {},
+			key, loc, disp = [];
+		for(var i in rawjson) {
+			if(rawjson[i].class == 'boundary') {
+				disp = rawjson[i].display_name + ', OSM_id: ' + rawjson[i].osm_id;
+				key = disp;
+				loc = L.latLng(rawjson[i].lat, rawjson[i].lon);
+				json[key] = loc; //key,value format
+			}
+		}
+		// console.log(json)
+		return json;
+	}
+	var infoBtn = L.easyButton('fa-chart-pie', function(btn, map) {
+		var myModal2 = new bootstrap.Modal(document.getElementById('exampleModal2'), {
+			keyboard: false
+		})
+		myModal2.toggle();
+		infoBtn.button.style.backgroundColor = 'white';
+		// document.getElementById('exampleModal2').addEventListener('shown.bs.modal', function () {
+		// 	document.getElementById("btnPrint").onclick = function() {
+		// 	    printElement(document.getElementById("exampleModal2"));
+		// 	    window.print();
+		// 	}
+		// })
+	});
+		infoBtn.button.title = 'More infomation'
+	infoBtn.addTo(map);
+
+
+
+	// var infoBtn2 = L.easyButton('fa-chart-pie', function(btn, map) {
+	// 	$('.info').toggle();
+	// });
+	// infoBtn2.button.title = 'Toggle charts'
+	// infoBtn2.setPosition('topright').addTo(map);
+
+
+
+	// * issue with screenshot tool error when popup open
+	// var screenshotBtn = L.easyButton('fa-camera', function(btn, map) {
+	// 	map.downloadExport({
+	// 		container: map._container,
+	// 		format: "image/jpg",
+	// 		fileName: "map.jpg",
+	// 		exclude: ['.leaflet-control-zoom', '.leaflet-control', '.leaflet-control-attribution', '.layercontrol', '.leaflet-control-layers', '.no-scrolling-clicking']
+	// 	})
+	// }).setPosition('topleft').addTo(map);
+	// screenshotBtn.button.title = 'Download map screenshot'
+
+
+	var legendBtn = L.easyButton('fa-list', function(btn, map) {
+$('.info.legend').toggle();
+	}).setPosition('bottomright').addTo(map);
+
+
+
+
+	// control that shows state info on hover
+	// const info = L.control();
+	//
+	// info.onAdd = function (map) {
+	// 	this._div = L.DomUtil.create('div', 'info');
+	// 	this.update();
+	// 	return this._div;
+	// };
+	//
+	// info.update = function (props) {
+	// 	var popupContent = "";
+	// 	if (typeof props !== 'undefined') {
+	// 		if (Object.keys(props.tags).includes('name') == true) {
+	// 			name = props.tags['name']
+	// 		} else {
+	// 			if (Object.keys(props.tags).includes('ref') == true) {
+	// 				name = props.tags['ref']
+	// 			} else {
+	// 				name = 'Unnamed route'
+	// 			}
+	// 		}
+	//
+	//
+	// 		var carsBanned = false;
+	// 		var keys = Object.keys(props.tags);
+	// 		keys.forEach(function(key) {
+	// 			if(key.includes('tiger') == false && key.includes('name') == false && key.includes('hgv') == false && key.includes('source') == false && key.includes('old_ref') == false) {
+	// 				popupContent = popupContent + "<b>" + key + "</b>: " + props.tags[key] + "<br>";
+	// 			}
+	// 		});
+	// 	}
+	// 	const contents = props ? `<h6 style="margin-bottom:0;padding-bottom:0">${name}</h6>` : 'Hover/click on a path';
+	//
+	//
+	//
+	// 	this._div.innerHTML = `${contents}${popupContent}`;
+	// };
+	//
+	// info.addTo(map);
+	//
+	function highlightFeature(e) {
+		const layer = e.target;
+
+		layer.setStyle({
+			weight: 8,
+			//color: '#00FFFF',
+			dashArray: '',
+			fillOpacity: 0.7,
+			opacity: 1,
+			outline: '5px dotted green'
+		});
+
+		if (!L.Browser.opera) {
+			layer.bringToFront();
+		}
+
+		// info.update(layer.feature.properties);
+	}
+
+
+
+	if(window.location.hash) {
+		// Fragment exists
+		analyzeLocation(0, 0, window.location.hash.split('-').at(-1))
+	} else {
+		// Fragment doesn't exist
+	}
+
+
+
+	var legend = L.control({position: 'bottomright'});
+
+legend.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend')
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    div.innerHTML = '<span style="display:inline-block;width:22px;height:14px;margin-right:10px"></span> <strong><u>Legend</u></strong>'+
+		'<br> <span style="display:inline-block;width:22px;height:14px;background-color:'+colors[4]+';margin-right:10px"></span> <span>Separated lane</span>'+
+		'<br> <span style="display:inline-block;width:11px;height:14px;background-color:'+colors[2]+';margin-right:0px"></span><span style="display:inline-block;width:11px;height:14px;background-color:'+colors[1]+';margin-right:10px"></span> <span>Mixed lane (25/30+)</span>'+
+		'<br> <span style="display:inline-block;width:22px;height:14px;background-color:'+colors[0]+';margin-right:10px"></span> <span>Unmarked lane</span>'+
+		'<br> <span style="display:inline-block;width:22px;height:14px;margin-right:10px"></span> <small><a target="_blank" href=""><i>What\'s the difference?</i></a></small>'+
+		'<br><br> <span style="display:inline-block;width:22px;height:5px;background-color:black;margin-right:10px"></span> <span>Primary street</span>'+
+		'<br> <span style="display:inline-block;width:22px;height:4px;background-color:black;margin-right:10px"></span> <span>Secondary street</span>'+
+		'<br> <span style="display:inline-block;width:22px;height:3px;background-color:black;margin-right:10px"></span> <span>Tertiary street</span>'
+
+    return div;
+};
+
+legend.addTo(map);
+
+
+
+
+
+
+
+
+
+	</script>
+</body>
+
+</html>
