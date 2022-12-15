@@ -355,6 +355,26 @@ html {
 				</select>
 			</div>
 
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">turn:lanes:forward</label>
+			  <input id="turn:lanes:forward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+			</div>
+
+			<div class="input-group mb-3">
+				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:lanes:forward</label>
+				<input id="cycleway:lanes:forward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">turn:lanes:backward</label>
+			  <input id="turn:lanes:backward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+			</div>
+
+			<div class="input-group mb-3">
+				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:lanes:backward</label>
+				<input id="cycleway:lanes:backward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+			</div>
+
 
 
 
@@ -563,6 +583,28 @@ document.getElementById("parking:lane:both:width").addEventListener("keyup", fun
 	drawLanes(streetsAsGeojson)
 }, true);
 
+
+document.getElementById("cycleway:lanes:forward").addEventListener("keyup", function(){
+	if (document.getElementById("cycleway:lanes:forward").value!="") {
+		feature.properties.tags['cycleway:lanes:forward'] = document.getElementById("cycleway:lanes:forward").value
+	} else {
+		delete feature.properties.tags['cycleway:lanes:forward']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("cycleway:lanes:backward").addEventListener("keyup", function(){
+	if (document.getElementById("cycleway:lanes:backward").value!="") {
+		feature.properties.tags['cycleway:lanes:backward'] = document.getElementById("cycleway:lanes:backward").value
+	} else {
+		delete feature.properties.tags['cycleway:lanes:backward']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
 
 
 function loadCrossSection(feature) {
