@@ -649,6 +649,28 @@ document.getElementById("cycleway:lanes:backward").addEventListener("keyup", fun
 	drawLanes(streetsAsGeojson)
 }, true);
 
+document.getElementById("turn:lanes:forward").addEventListener("keyup", function(){
+	if (document.getElementById("turn:lanes:forward").value!="") {
+		feature.properties.tags['turn:lanes:forward'] = document.getElementById("turn:lanes:forward").value
+	} else {
+		delete feature.properties.tags['turn:lanes:forward']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("turn:lanes:backward").addEventListener("keyup", function(){
+	if (document.getElementById("turn:lanes:backward").value!="") {
+		feature.properties.tags['turn:lanes:backward'] = document.getElementById("turn:lanes:backward").value
+	} else {
+		delete feature.properties.tags['turn:lanes:backward']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
 
 function loadCrossSection(feature) {
 
