@@ -373,22 +373,30 @@ html {
 
 			<div class="input-group mb-3">
 			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">turn:lanes:forward</label>
-			  <input id="turn:lanes:forward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+			  <input id="turn:lanes:forward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder=""></input>
 			</div>
 
 			<div class="input-group mb-3">
 				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:lanes:forward</label>
-				<input id="cycleway:lanes:forward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+				<input id="cycleway:lanes:forward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder=""></input>
 			</div>
 
 			<div class="input-group mb-3">
 			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">turn:lanes:backward</label>
-			  <input id="turn:lanes:backward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+			  <input id="turn:lanes:backward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder=""></input>
 			</div>
 
 			<div class="input-group mb-3">
 				<label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:lanes:backward</label>
-				<input id="cycleway:lanes:backward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="through"></input>
+				<input id="cycleway:lanes:backward" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder=""></input>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:right:separation:left:width</label>
+			  <input id="cycleway:right:separation:left:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="2' default" value=""></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftcycleway:right:separation:left:width" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
 			</div>
 
 
@@ -522,7 +530,14 @@ function matchElements() {
 		} else {
 			feature.properties.tags['parking:lane:both:width'] = Number(document.getElementById("parking:lane:both:width").value.replace("'",''))
 		}
+	}
 
+	if (document.getElementById("cycleway:right:separation:left:width").value != "") {
+		if (document.getElementById("ftcycleway:right:separation:left:width").checked && (document.getElementById("cycleway:right:separation:left:width").value.includes("'")) == false) {
+			feature.properties.tags['cycleway:right:separation:left:width'] = document.getElementById("cycleway:right:separation:left:width").value + "'"
+		} else {
+			feature.properties.tags['cycleway:right:separation:left:width'] = Number(document.getElementById("cycleway:right:separation:left:width").value.replace("'",''))
+		}
 	}
 }
 
@@ -531,14 +546,12 @@ function matchElements() {
 $('#centerlineOffset').on('change', function(e) {
 	e.preventDefault();
 	matchElements();
-	loadCrossSection(feature)
 	drawLanes(streetsAsGeojson)
 });
 
 
 $('#dlJson').on('click', function(e) {
   e.preventDefault();
-	// download($('#code').text(), findGetParameter('id')+'.json', 'text/plain');
 	copyTextFunc($('#code').text())
 });
 
@@ -593,6 +606,20 @@ document.getElementById("parking:lane:both:width").addEventListener("keyup", fun
 		}
 	} else {
 		delete feature.properties.tags['parking:lane:both:width']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("cycleway:right:separation:left:width").addEventListener("keyup", function(){
+	if (document.getElementById("cycleway:right:separation:left:width").value!="") {
+		feature.properties.tags['cycleway:right:separation:left:width'] = document.getElementById("cycleway:right:separation:left:width").value
+		if (document.getElementById("ftcycleway:right:separation:left:width").checked) {
+			feature.properties.tags['cycleway:right:separation:left:width'] += "'"
+		}
+	} else {
+		delete feature.properties.tags['cycleway:right:separation:left:width']
 	}
 
 	loadCrossSection(feature)
@@ -730,9 +757,9 @@ function loadCrossSection(feature) {
 		Object.keys(feature.properties.tags).forEach ( tag => {
 			if (document.getElementById(tag)) {
 				if (tag == "maxspeed") {
-					document.getElementById(tag).value = feature.properties.tags[tag].split(" ")[0]
+					document.getElementById(tag).value = String(feature.properties.tags[tag]).split(" ")[0]
 
-					if (feature.properties.tags[tag].split(" ")[1] == 'mph') {
+					if (String(feature.properties.tags[tag]).split(" ")[1] == 'mph') {
 							$('#mphCheck').is(':checked')==true
 					}
 

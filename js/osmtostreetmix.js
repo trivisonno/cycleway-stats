@@ -33,7 +33,6 @@ function generateCrossSectionTable(feature) {
           } else { // if metric/meters measure
             width = tags['lanes:width'] / 0.3048 * pixelsPerInch
           }
-
         }
 
         // width override based on OSM json tags
@@ -43,7 +42,6 @@ function generateCrossSectionTable(feature) {
           } else { // if metric/meters measure
             widthBike = tags['cycleway:lane:width'] / 0.3048 * pixelsPerInch
           }
-
         }
 
         // width override based on OSM json tags
@@ -53,7 +51,18 @@ function generateCrossSectionTable(feature) {
           } else { // if metric/meters measure
             widthParking = tags['parking:lane:both:width'] / 0.3048 * pixelsPerInch
           }
+        }
 
+        // width override based on OSM json tags
+        if (Object.keys(tags).includes('cycleway:right:separation:left:width') == true) {
+          if (tags['cycleway:right:separation:left:width'].toString().includes("'")) { // if imperial/feet measure
+            cycleway_right_separation_left_width = Number(tags['cycleway:right:separation:left:width'].replace("'",'')) * pixelsPerInch
+          } else { // if metric/meters measure
+            cycleway_right_separation_left_width = tags['cycleway:right:separation:left:width'] / 0.3048 * pixelsPerInch
+          }
+
+        } else {
+          cycleway_right_separation_left_width = widthSeparationBuffer
         }
 
 
@@ -278,7 +287,7 @@ function generateCrossSectionTable(feature) {
 	}
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:left') == true) {
-    html += "<td style='width: "+widthSeparationBuffer+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:right:separation:left']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:right:separation:left']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
   }
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == true && tags['cycleway:right:traffic_mode:left'] == 'parking') {
@@ -415,7 +424,7 @@ function generateCrossSectionTable(feature) {
 
   if (Object.keys(tags).includes('cycleway:lanes:forward') == false || tags['cycleway:lanes:forward'].split("|").reverse()[0] != 'no') {
   	if ((tags['cycleway']=='lane' || tags['cycleway:both']=='lane' || tags['cycleway:right']=='lane' || (tags['oneway']=='yes' && tags['cycleway:right']=='lane'))) {
-  		html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-left.svg) no-repeat top left;background-color: green'></td>"
+  		html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-left.svg) no-repeat top left;border-right:4px solid white; background-color: green'></td>"
   	}
   }
 
@@ -424,7 +433,7 @@ function generateCrossSectionTable(feature) {
 	}
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:left') == true) {
-    html += "<td style='width: "+widthSeparationBuffer+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:right:separation:left']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:right:separation:left']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
   }
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == true && tags['cycleway:right:traffic_mode:left'] == 'parking') {
@@ -559,8 +568,8 @@ function generateCrossSectionTable(feature) {
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:left') == true) {
     bufferType = tags['cycleway:right:separation:left']
-    html += "<td style='text-align: center;width: "+widthSeparationBuffer+"px;'>"+itemNames[bufferType]['desc']+"</td>"
-		totalStreetWidth += widthSeparationBuffer/pixelsPerInch
+    html += "<td style='text-align: center;width: "+cycleway_right_separation_left_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
+		totalStreetWidth += cycleway_right_separation_left_width/pixelsPerInch
     offsetArray.push(totalStreetWidth)
   }
 
