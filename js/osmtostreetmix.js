@@ -125,7 +125,7 @@ function generateCrossSectionTable(feature) {
     'planter' :
       {'desc': 'Planter', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/dividers/planter-box.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'},
     'kerb' :
-       {'desc': 'Kerb', 'url': '', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'},
+       {'desc': 'Kerb', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/utilities/drainage-channel-piece-center.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'},
     'cone' :
        {'desc': 'Cones', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/construction/cone.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'}
      }
