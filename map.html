@@ -183,7 +183,7 @@
 	function buildOverpassApiUrlRoadways(map, overpassQuery, id) {
 		var query = '?data=[out:json][timeout:300];area(' + id.toString() + ')->.searchArea;(way["highway"="residential"](area.searchArea);way["highway"="tertiary"](area.searchArea);way["highway"="secondary"](area.searchArea);way["highway"="primary"](area.searchArea);way["highway"="unclassified"](area.searchArea);way["highway"~"^(footway|path)$"]["bicycle"~"^(yes|designated)$"](area.searchArea);way["highway"="cycleway"](area.searchArea);way["highway"="trunk"](area.searchArea);way["highway"="primary_link"](area.searchArea);way["highway"="secondary_link"](area.searchArea);way["highway"="tertiary_link"](area.searchArea););out geom;';
 		var baseUrl = 'https://overpass.kumi.systems/api/interpreter';
-		// var baseUrl = 'https://overpass-api.de/api/interpreter';
+		var baseUrl = 'https://overpass-api.de/api/interpreter';
 		var resultUrl = baseUrl + query;
 		return resultUrl;
 	}
@@ -673,7 +673,7 @@
 		// var [lat, lng, level] = [41.5010,-81.6929,8]
 		var query = '?data=[out:json][timeout:300];rel(' + osm_id.toString() + ');out geom;';
 		var baseUrl = 'https://overpass.kumi.systems/api/interpreter';
-		// var baseUrl = 'https://overpass-api.de/api/interpreter';
+		var baseUrl = 'https://overpass-api.de/api/interpreter';
 		var overpassApiUrl = baseUrl + query;
 		$.get(overpassApiUrl, function(osmDataAsJson) {
 			document.getElementById('location-name').innerHTML = osmDataAsJson['elements'][0]['tags']['name'];
