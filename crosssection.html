@@ -169,7 +169,7 @@ html {
 						  <option value="" selected>None</option>
 						  <option value="lane">Bike lane</option>
 						  <option value="shared_lane">Mixed lane (sharrow)</option>
-						  <option value="track">Cycle track (drawn with lanes)</option>
+						  <option value="track">Cycle track (vertical barrier)</option>
 						  <option value="share_busway">Mixed bus lane (sharrow)</option>
 						  <option value="separated">Separated (not drawn with lanes)</option>
 						</select>
@@ -198,7 +198,7 @@ html {
 				  <option value="" selected>None</option>
 				  <option value="lane">Bike lane</option>
 				  <option value="shared_lane">Mixed lane (sharrow)</option>
-				  <option value="track">Cycle track (drawn with lanes)</option>
+				  <option value="track">Cycle track (vertical barrier)</option>
 				  <option value="share_busway">Mixed bus lane (sharrow)</option>
 				  <option value="separated">Separated (not drawn with lanes)</option>
 				</select>
@@ -248,7 +248,7 @@ html {
 				  <option value="" selected>None</option>
 				  <option value="lane">Bike lane</option>
 				  <option value="shared_lane">Mixed lane (sharrow)</option>
-				  <option value="track">Cycle track (drawn with lanes)</option>
+				  <option value="track">Cycle track (vertical barrier)</option>
 				  <option value="share_busway">Mixed bus lane (sharrow)</option>
 				  <option value="separated">Separated (not drawn with lanes)</option>
 				</select>
@@ -397,6 +397,30 @@ html {
 				<div class="input-group-text">
 			    <input class="form-check-input mt-0" id="ftcycleway:right:separation:left:width" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
 			  </div>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label">oneway:bicycle</label>
+			  <select id="oneway:bicycle" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>yes</option>
+				  <option value="no">no</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:right:oneway</label>
+			  <select id="cycleway:right:oneway" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>yes</option>
+				  <option value="no">no</option>
+				</select>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:left:oneway</label>
+			  <select id="cycleway:left:oneway" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
+					<option value="" selected>yes</option>
+				  <option value="no">no</option>
+				</select>
 			</div>
 
 
