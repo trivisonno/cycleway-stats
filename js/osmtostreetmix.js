@@ -452,7 +452,7 @@ function generateCrossSectionTable(feature) {
   }
 
   if ((tags['cycleway']=='lane' || tags['cycleway:both']=='lane' || tags['cycleway:left']=='lane') && (tags['oneway']!='yes') && (Object.keys(tags).includes('cycleway:lanes:backward') == false || tags['cycleway:lanes:backward'].split("|")[0] != 'no')) {
-    if (tags['cycleway:left:oneway']=='no') {
+    if (tags['cycleway:left:oneway']=='no' || tags['oneway:bicycle']=='no') {
       html += "<td style='width: "+widthBike+"px; height: "+vehicleRowHeight+"px; background: url("+bikeLanePeopleInbound[(Math.floor(Math.random() * 3))]+") no-repeat top center;background-color:#a9ccdb;'></td>"
     }
     html += "<td style='width: "+widthBike+"px; height: "+vehicleRowHeight+"px; background: url("+bikeLanePeopleOutbound[(Math.floor(Math.random() * 3))]+") no-repeat top center;background-color:#a9ccdb;'></td>"
@@ -462,7 +462,7 @@ function generateCrossSectionTable(feature) {
     html += "<td style='width: "+widthBike+"px; height: "+vehicleRowHeight+"px; background: url("+bikeLanePeopleOutbound[(Math.floor(Math.random() * 3))]+") no-repeat top center;background-color:#a9ccdb;'></td>"
   }
 
-  if ((tags['cycleway:left']=='track' || tags['cycleway']=='track') && (tags['oneway:bicycle']=='no' || tags['cycleway:right:oneway']=='no')) {
+  if ((tags['cycleway:left']=='track' || tags['cycleway']=='track') && (tags['oneway:bicycle']=='no' || tags['cycleway:left:oneway']=='no')) {
 		html += "<td style='width: "+widthBike+"px; height: "+vehicleRowHeight+"px; background: url("+bikeLanePeopleInbound[(Math.floor(Math.random() * 3))]+") no-repeat top center;background-color:#a9ccdb;'></td><td style='width: "+widthBike+"px; height: "+vehicleRowHeight+"px; background: url("+bikeLanePeopleOutbound[(Math.floor(Math.random() * 3))]+") no-repeat top center;background-color:#a9ccdb;'></td>"
 	} else if ((tags['cycleway:left']=='track' || tags['cycleway']=='track')) {
     html += "<td style='width: "+widthBike+"px; height: "+vehicleRowHeight+"px; background: url("+bikeLanePeopleOutbound[(Math.floor(Math.random() * 3))]+") no-repeat top center;background-color:#a9ccdb;'></td>"
@@ -592,21 +592,23 @@ function generateCrossSectionTable(feature) {
 
   if (Object.keys(tags).includes('cycleway:lanes:backward') == false || tags['cycleway:lanes:backward'].split("|")[0] != 'no') {
     if (tags['cycleway']=='lane' || tags['cycleway:both']=='lane' || tags['cycleway:left']=='lane') {
-      if (tags['cycleway:left:oneway']=='no') {
+      if ((tags['oneway:bicycle']=='no' || tags['cycleway:left:oneway']=='no')) {
         html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green';'></td>"
         html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;background-color: green';'></td>"
       } else {
-        html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green';'></td>"
+        if (tags['oneway']=='yes') {
+          html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green';'></td>"
+        } else {
+          html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green';'></td>"
+          }
       }
 
-  	} else if (tags['oneway']=='yes' && tags['oneway:bicycle']!='no' && (tags['cycleway']=='lane' || tags['cycleway:both']=='lane' || tags['cycleway:left']=='lane')) {
+  	} else if (tags['oneway']=='yes' && (tags['oneway:bicycle']!='no' || tags['cycleway:left:oneway']!='no') && (tags['cycleway']=='lane' || tags['cycleway:both']=='lane' || tags['cycleway:left']=='lane')) {
   		html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green';'></td>"
-  	} else if (tags['oneway']=='yes' && tags['oneway:bicycle']=='no' && (tags['cycleway']=='lane' || tags['cycleway:both']=='lane' || tags['cycleway:left']=='lane')) {
-      html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green';'></td>"
-    }
+  	}
   }
 
-  if ((tags['cycleway:left']=='track' || tags['cycleway']=='track') && (tags['oneway:bicycle']=='no' || tags['cycleway:right:oneway']=='no')) {
+  if ((tags['cycleway:left']=='track' || tags['cycleway']=='track') && (tags['oneway:bicycle']=='no' || tags['cycleway:left:oneway']=='no')) {
 		html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;background-color: green'></td><td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;background-color: green'></td>"
 	} else if ((tags['cycleway:left']=='track' || tags['cycleway']=='track')) {
     html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green';'></td>"
@@ -805,7 +807,7 @@ function generateCrossSectionTable(feature) {
   	}
   }
 
-  if ((tags['cycleway:left']=='track' || tags['cycleway']=='track') && (tags['oneway:bicycle']=='no' || tags['cycleway:right:oneway']=='no')) {
+  if ((tags['cycleway:left']=='track' || tags['cycleway']=='track') && (tags['oneway:bicycle']=='no' || tags['cycleway:left:oneway']=='no')) {
 		html += "<td colspan=2 style='text-align: center;width: "+widthBike*2+"px;'>Cycle track</td>"
 		totalStreetWidth += widthBike*2/pixelsPerInch
     offsetArray.push(totalStreetWidth)
