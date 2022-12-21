@@ -41,6 +41,10 @@ html {
 <link rel="stylesheet" href="https://unpkg.com/leaflet-gesture-handling/dist/leaflet-gesture-handling.min.css" type="text/css">
 <script src="https://unpkg.com/leaflet-gesture-handling"></script>
 
+<!-- Load Esri Leaflet from CDN -->
+<script src="https://unpkg.com/esri-leaflet@^3.0.9/dist/esri-leaflet.js"></script>
+<script src="https://unpkg.com/esri-leaflet-vector@4.0.0/dist/esri-leaflet-vector.js"></script>
+
 <script src="js/calcstats.js"></script>
 
 <style>
@@ -176,7 +180,7 @@ html {
 						  <option value="shared_lane">Mixed lane (sharrow)</option>
 						  <option value="track">Cycle track (vertical barrier)</option>
 						  <option value="share_busway">Mixed bus lane (sharrow)</option>
-						  <option value="separated">Separated (not drawn with lanes)</option>
+						  <option value="separate">Separated (not drawn with lanes)</option>
 						</select>
 					</div>
 
@@ -205,7 +209,7 @@ html {
 				  <option value="shared_lane">Mixed lane (sharrow)</option>
 				  <option value="track">Cycle track (vertical barrier)</option>
 				  <option value="share_busway">Mixed bus lane (sharrow)</option>
-				  <option value="separated">Separated (not drawn with lanes)</option>
+				  <option value="separate">Separated (not drawn with lanes)</option>
 				</select>
 			</div>
 
@@ -255,7 +259,7 @@ html {
 				  <option value="shared_lane">Mixed lane (sharrow)</option>
 				  <option value="track">Cycle track (vertical barrier)</option>
 				  <option value="share_busway">Mixed bus lane (sharrow)</option>
-				  <option value="separated">Separated (not drawn with lanes)</option>
+				  <option value="separate">Separated (not drawn with lanes)</option>
 				</select>
 			</div>
 
@@ -466,6 +470,7 @@ var wayLineString;
 var multiplier = 1.6;
 
 var map = L.map('map', {
+	maxZoom: 21,
 	zoomSnap: 1,
 	almostOnMouseMove: false,
     gestureHandling: true
@@ -487,6 +492,13 @@ var hybridMutant = L.gridLayer
     maxNativeZoom: 22
   })
   .addTo(map);
+
+// L.esri.tiledMapLayer({
+// 		url: 'https://gis.cuyahogacounty.us/server/rest/services/IMAGERY/2021_Fall_Aerial/MapServer/',
+// 		zoomOffset: -10,
+// 		maxZoom: 21,
+// })
+// .addTo(map);
 
 
 function loadFeature() {
