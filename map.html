@@ -443,7 +443,7 @@
 					var keys = Object.keys(feature.properties.tags);
 					keys.forEach(function(key) {
 						if(key.includes('tiger') == false && key.includes('hgv') == false && key.includes('source') == false && key.includes('old_ref') == false) {
-							popupContent = popupContent + "<b>" + key + "</b>: " + feature.properties.tags[key] + "<br>";
+							popupContent = popupContent + "<b>" + key + "</b>=" + feature.properties.tags[key] + "<br>";
 						}
 					});
 

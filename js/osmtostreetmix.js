@@ -268,7 +268,7 @@ function generateCrossSectionTable(feature) {
   if (Object.keys(tags).includes('turn:lanes:forward') == true) {
     turnLanesForward = tags['turn:lanes:forward'].split("|").reverse()
     for (i=0; i<turnLanesForward.length; i++) {
-      if (turnLanesForward[i] == '') {
+      if (turnLanesForward[i] == '' || turnLanesForward[i] == 'none') {
         turnLanesForward[i] = 'through'
       }
       // turnLanesForward[i] = 'through'
@@ -285,7 +285,7 @@ function generateCrossSectionTable(feature) {
   if (Object.keys(tags).includes('turn:lanes:backward') == true) {
     turnLanesBackward = tags['turn:lanes:backward'].split("|")
     for (i=0; i<turnLanesBackward.length; i++) {
-      if (turnLanesBackward[i] == '') {
+      if (turnLanesBackward[i] == '' || turnLanesBackward[i] == 'none') {
         turnLanesBackward[i] = 'through'
       }
       // turnLanesForward[i] = 'through'
@@ -389,7 +389,7 @@ function generateCrossSectionTable(feature) {
         if (turnLanesForward[i]!='through' && i==0) {
           html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
         } else {
-          html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
         }
       } else {
         if (turnLanesForward[i]!='through') {
@@ -398,7 +398,7 @@ function generateCrossSectionTable(feature) {
           html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
         }
       }
-    
+
 		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && i==0) {
 			html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+inboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
 		} else if ((tags['bus:lanes:forward']=='designated' || tags['bus:lanes:forward']=='yes|designated' || tags['bus:lanes:forward']=='yes|yes|designated') && i==0) {
@@ -578,7 +578,7 @@ function generateCrossSectionTable(feature) {
           if (turnLanesForward[i]!='through' && i==0) {
             html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top left, url("+turnMarkings['inbound'][turnLanesForward[i]]+") no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
           } else {
-            html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url("+turnMarkings['inbound'][turnLanesForward[i]]+") no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
+            html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
           }
         } else {
           if (turnLanesForward[i]!='through') {
@@ -617,10 +617,29 @@ function generateCrossSectionTable(feature) {
       html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;border-left:4px solid white; background-color: green'></td>"
     }
 		if ((tags['cycleway']=='shared_lane' || tags['cycleway:left']=='shared_lane' || tags['cycleway:both']=='shared_lane') && i==lanesBackward-1) {
-      if (turnLanesBackward[i] == 'through' && (Object.keys(tags).includes('cycleway:lanes:backward') == true &&  tags['cycleway:lanes:backward'].split("|")[i] != 'shared_lane')) {
-        html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top center;border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
+      // if through and cycleway lanes defined and the lane isnt shared_lane
+      if (Object.keys(tags).includes('cycleway:lanes:backward') == true) {
+        console.log(tags['cycleway:lanes:backward'].split("|")[i])
+         if (tags['cycleway:lanes:backward'].split("|")[i] != 'shared_lane') {
+          html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url("+turnMarkings['outbound'][turnLanesBackward[i]]+") no-repeat top center; border-right:4px dashed white; background-color:black;"+centerline+"'></td>"
+          // html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top center;border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
+        }
+        // if cycleway lanes defined and the lane IS shared_lane
+        else {
+          html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top right, url("+turnMarkings['outbound'][turnLanesBackward[i]]+") no-repeat top center; border-right:4px dashed white; background-color:black;"+centerline+"'></td>"
+        }
+      } else if (Object.keys(tags).includes('cycleway:lanes:backward') == false) {
+        if (turnLanesBackward[i]!='through' && i==0) {
+          html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top right, url("+turnMarkings['outbound'][turnLanesBackward[i]]+") no-repeat top center; border-right:4px dashed white; background-color:black;"+centerline+"'></td>"
+        } else {
+          html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top center; border-right:4px dashed white; background-color:black;"+centerline+"'></td>"
+        }
       } else {
-        html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top right, url("+turnMarkings['outbound'][turnLanesBackward[i]]+") no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
+        if (turnLanesBackward[i]!='through') {
+          html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top right, url("+turnMarkings['outbound'][turnLanesBackward[i]]+") no-repeat top center; border-right:4px dashed white; background-color:black;"+centerline+"'></td>"
+        } else {
+          html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url("+turnMarkings['outbound'][turnLanesBackward[i]]+") no-repeat top center; border-right:4px dashed white; background-color:black;"+centerline+"'></td>"
+        }
       }
 			// html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top center;border-right:4px dashed white; background-color:black;"+centerline+"'></td>"
 		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:left']=='share_busway' || tags['cycleway:left']=='share_busway') && i==lanesBackward-1) {
