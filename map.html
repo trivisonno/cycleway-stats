@@ -816,36 +816,11 @@
 		})
 		myModal2.toggle();
 		infoBtn.button.style.backgroundColor = 'white';
-		// document.getElementById('exampleModal2').addEventListener('shown.bs.modal', function () {
-		// 	document.getElementById("btnPrint").onclick = function() {
-		// 	    printElement(document.getElementById("exampleModal2"));
-		// 	    window.print();
-		// 	}
-		// })
+	
 	});
 		infoBtn.button.title = 'More infomation'
 	infoBtn.addTo(map);
 
-
-
-	// var infoBtn2 = L.easyButton('fa-chart-pie', function(btn, map) {
-	// 	$('.info').toggle();
-	// });
-	// infoBtn2.button.title = 'Toggle charts'
-	// infoBtn2.setPosition('topright').addTo(map);
-
-
-
-	// * issue with screenshot tool error when popup open
-	// var screenshotBtn = L.easyButton('fa-camera', function(btn, map) {
-	// 	map.downloadExport({
-	// 		container: map._container,
-	// 		format: "image/jpg",
-	// 		fileName: "map.jpg",
-	// 		exclude: ['.leaflet-control-zoom', '.leaflet-control', '.leaflet-control-attribution', '.layercontrol', '.leaflet-control-layers', '.no-scrolling-clicking']
-	// 	})
-	// }).setPosition('topleft').addTo(map);
-	// screenshotBtn.button.title = 'Download map screenshot'
 
 
 	var legendBtn = L.easyButton('fa-list', function(btn, map) {
@@ -853,48 +828,6 @@ $('.info.legend').toggle();
 	}).setPosition('bottomright').addTo(map);
 
 
-
-
-	// control that shows state info on hover
-	// const info = L.control();
-	//
-	// info.onAdd = function (map) {
-	// 	this._div = L.DomUtil.create('div', 'info');
-	// 	this.update();
-	// 	return this._div;
-	// };
-	//
-	// info.update = function (props) {
-	// 	var popupContent = "";
-	// 	if (typeof props !== 'undefined') {
-	// 		if (Object.keys(props.tags).includes('name') == true) {
-	// 			name = props.tags['name']
-	// 		} else {
-	// 			if (Object.keys(props.tags).includes('ref') == true) {
-	// 				name = props.tags['ref']
-	// 			} else {
-	// 				name = 'Unnamed route'
-	// 			}
-	// 		}
-	//
-	//
-	// 		var carsBanned = false;
-	// 		var keys = Object.keys(props.tags);
-	// 		keys.forEach(function(key) {
-	// 			if(key.includes('tiger') == false && key.includes('name') == false && key.includes('hgv') == false && key.includes('source') == false && key.includes('old_ref') == false) {
-	// 				popupContent = popupContent + "<b>" + key + "</b>: " + props.tags[key] + "<br>";
-	// 			}
-	// 		});
-	// 	}
-	// 	const contents = props ? `<h6 style="margin-bottom:0;padding-bottom:0">${name}</h6>` : 'Hover/click on a path';
-	//
-	//
-	//
-	// 	this._div.innerHTML = `${contents}${popupContent}`;
-	// };
-	//
-	// info.addTo(map);
-	//
 	function highlightFeature(e) {
 		const layer = e.target;
 
