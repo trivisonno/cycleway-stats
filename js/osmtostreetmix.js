@@ -236,6 +236,7 @@ function generateCrossSectionTable(feature) {
     if (Object.keys(tags).includes('lanes:forward') && Object.keys(tags).includes('lanes:backward')==false) {
 			if (Object.keys(tags).includes('oneway') && tags['oneway'] == 'yes') {
 				lanesForward = tags['lanes:forward']
+        lanesBackward = 0
 			} else {
 				lanesForward = tags['lanes:forward']
         lanesBackward = lanes - lanesForward
@@ -388,8 +389,10 @@ function generateCrossSectionTable(feature) {
       } else if (Object.keys(tags).includes('cycleway:lanes:forward') == false) {
         if (turnLanesForward[i]!='through' && i==0) {
           html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
-        } else {
+        } else if (turnLanesForward[i]=='through' && i==0){
           html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+        } else {
+          html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
         }
       } else {
         if (turnLanesForward[i]!='through') {
@@ -577,8 +580,11 @@ function generateCrossSectionTable(feature) {
         } else if (Object.keys(tags).includes('cycleway:lanes:forward') == false) {
           if (turnLanesForward[i]!='through' && i==0) {
             html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top left, url("+turnMarkings['inbound'][turnLanesForward[i]]+") no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
-          } else {
+          } else if (turnLanesForward[i]=='through' && i==0){
             html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
+          }
+            else {
+            html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url("+turnMarkings['inbound'][turnLanesForward[i]]+") no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
           }
         } else {
           if (turnLanesForward[i]!='through') {

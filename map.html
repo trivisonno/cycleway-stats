@@ -265,51 +265,64 @@
 							lineWeight = 2;
 							colorHex = colors[3]; // green
               colorHex = "#444444";
+
 							opacity = 0.01
-							dashArrayStr = '10,10'
+							// dashArrayStr = '10,10'
 						}
 
 
 					if((feature.properties.tags['cycleway'] == "shared_lane" || feature.properties.tags['cycleway'] == "shared_bus") && maxspeed > 25) {
 						colorHex = colors[1];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:right'] == "shared_lane" || feature.properties.tags['cycleway:right'] == "shared_bus") && maxspeed > 25) {
 						colorHex = colors[1];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:left'] == "shared_lane" || feature.properties.tags['cycleway:left'] == "shared_bus") && maxspeed > 25) {
 						colorHex = colors[1];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:both'] == "shared_lane" || feature.properties.tags['cycleway:both'] == "shared_bus") && maxspeed > 25) {
 						colorHex = colors[1];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway'] == "shared_lane" || feature.properties.tags['cycleway'] == "shared_bus") && maxspeed == 25) {
 						colorHex = colors[2];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:right'] == "shared_lane" || feature.properties.tags['cycleway:right'] == "shared_bus") && maxspeed == 25) {
 						colorHex = colors[2];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:left'] == "shared_lane" || feature.properties.tags['cycleway:left'] == "shared_bus") && maxspeed == 25) {
 						colorHex = colors[2];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:both'] == "shared_lane" || feature.properties.tags['cycleway:both'] == "shared_bus") && maxspeed == 25) {
 						colorHex = colors[2];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway'] == "shared_lane" || feature.properties.tags['cycleway'] == "shared_bus") && maxspeed < 25) {
 						colorHex = colors[3];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:right'] == "shared_lane" || feature.properties.tags['cycleway:right'] == "shared_bus") && maxspeed < 25) {
 						colorHex = colors[3];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:left'] == "shared_lane" || feature.properties.tags['cycleway:left'] == "shared_bus") && maxspeed < 25) {
 						colorHex = colors[3];
+						opacity = 1
 					} else if((feature.properties.tags['cycleway:both'] == "shared_lane" || feature.properties.tags['cycleway:both'] == "shared_bus") && maxspeed < 25) {
 						colorHex = colors[3];
+						opacity = 1
 					} else if(feature.properties.tags['cycleway'] == "lane" || feature.properties.tags['cycleway'] == "track") { // add a (bicycle=yes && motor_vehicle=no) condition
 						colorHex = colors[3];
 						opacity = 1
-						dashArrayStr='1'
+						// dashArrayStr='1'
 					} else if(feature.properties.tags['cycleway:left'] == "lane" || feature.properties.tags['cycleway:left'] == "track") {
 						colorHex = colors[3];
 						opacity = 1
-						dashArrayStr='1'
+						// dashArrayStr='1'
 					} else if(feature.properties.tags['cycleway:right'] == "lane" || feature.properties.tags['cycleway:right'] == "track") {
 						colorHex = colors[3];
 						opacity = 1
-						dashArrayStr='1'
+						// dashArrayStr='1'
 					} else if(feature.properties.tags['cycleway:both'] == "lane" || feature.properties.tags['cycleway:both'] == "track") {
 						colorHex = colors[3];
 						opacity = 1
-						dashArrayStr='1'
+						// dashArrayStr='1'
 					} else if(feature.properties.tags['highway'] == "cycleway" || feature.properties.tags['cycleway'] == "separate" || feature.properties.tags['cycleway:right'] == "separate" || feature.properties.tags['cycleway:left'] == "separate" || feature.properties.tags['cycleway:both'] == "separate" || feature.properties.tags['bicycle'] == 'use_sidepath' || (feature.properties.tags['highway'] == 'footway' && feature.properties.tags['bicycle'] == 'yes') || (feature.properties.tags['highway']=='path' && (feature.properties.tags['bicycle']=='designated' || feature.properties.tags['bicycle']=='yes'))) {
 						colorHex = colors[4];
 					} else {
@@ -816,7 +829,7 @@
 		})
 		myModal2.toggle();
 		infoBtn.button.style.backgroundColor = 'white';
-	
+
 	});
 		infoBtn.button.title = 'More infomation'
 	infoBtn.addTo(map);
@@ -873,7 +886,8 @@ legend.onAdd = function (map) {
 		'<br> <span style="display:inline-block;width:22px;height:14px;margin-right:10px"></span> <small><a target="_blank" href=""><i>What\'s the difference?</i></a></small>'+
 		'<br><br> <span style="display:inline-block;width:22px;height:5px;background-color:black;margin-right:10px"></span> <span>Primary street</span>'+
 		'<br> <span style="display:inline-block;width:22px;height:4px;background-color:black;margin-right:10px"></span> <span>Secondary street</span>'+
-		'<br> <span style="display:inline-block;width:22px;height:3px;background-color:black;margin-right:10px"></span> <span>Tertiary street</span>'
+		'<br> <span style="display:inline-block;width:22px;height:3px;background-color:black;margin-right:10px"></span> <span>Tertiary street</span>'+
+		'<br> <span style="display:inline-block;width:22px;height:2px;background-color:black;margin-right:10px"></span> <span>Residential street</span>'
 
     return div;
 };
