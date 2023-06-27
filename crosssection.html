@@ -11,6 +11,13 @@
 html {
 	font-family: sans-serif;
 }
+
+table.streetmix {
+	table-layout: fixed;
+}
+table.streetmix td {
+	/* word-break: break-all; */
+}
 	</style>
 	<link rel="stylesheet" href="css/main.css" />
 </style>
@@ -411,6 +418,30 @@ html {
 			</div>
 
 			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">cycleway:right:separation:right:width</label>
+			  <input id="cycleway:right:separation:right:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="2' default" value=""></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftcycleway:right:separation:right:width" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:left:separation:left:width</label>
+			  <input id="cycleway:left:separation:left:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="2' default" value=""></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftcycleway:left:separation:left:width" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">cycleway:left:separation:right:width</label>
+			  <input id="cycleway:left:separation:right:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="2' default" value=""></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftcycleway:left:separation:right:width" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+
+			<div class="input-group mb-3">
 			  <label class="col-sm-7 col-form-label">oneway:bicycle</label>
 			  <select id="oneway:bicycle" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
 					<option value="" selected>yes</option>
@@ -595,6 +626,30 @@ function matchElements() {
 			feature.properties.tags['cycleway:right:separation:left:width'] = Number(document.getElementById("cycleway:right:separation:left:width").value.replace("'",''))
 		}
 	}
+
+	if (document.getElementById("cycleway:right:separation:right:width").value != "") {
+		if (document.getElementById("ftcycleway:right:separation:right:width").checked && (document.getElementById("cycleway:right:separation:right:width").value.includes("'")) == false) {
+			feature.properties.tags['cycleway:right:separation:right:width'] = document.getElementById("cycleway:right:separation:right:width").value + "'"
+		} else {
+			feature.properties.tags['cycleway:right:separation:right:width'] = Number(document.getElementById("cycleway:right:separation:right:width").value.replace("'",''))
+		}
+	}
+
+	if (document.getElementById("cycleway:left:separation:left:width").value != "") {
+		if (document.getElementById("ftcycleway:left:separation:left:width").checked && (document.getElementById("cycleway:left:separation:left:width").value.includes("'")) == false) {
+			feature.properties.tags['cycleway:left:separation:left:width'] = document.getElementById("cycleway:left:separation:left:width").value + "'"
+		} else {
+			feature.properties.tags['cycleway:left:separation:left:width'] = Number(document.getElementById("cycleway:left:separation:left:width").value.replace("'",''))
+		}
+	}
+
+	if (document.getElementById("cycleway:left:separation:right:width").value != "") {
+		if (document.getElementById("ftcycleway:left:separation:right:width").checked && (document.getElementById("cycleway:left:separation:right:width").value.includes("'")) == false) {
+			feature.properties.tags['cycleway:left:separation:right:width'] = document.getElementById("cycleway:left:separation:right:width").value + "'"
+		} else {
+			feature.properties.tags['cycleway:left:separation:right:width'] = Number(document.getElementById("cycleway:left:separation:right:width").value.replace("'",''))
+		}
+	}
 }
 
 
@@ -676,6 +731,48 @@ document.getElementById("cycleway:right:separation:left:width").addEventListener
 		}
 	} else {
 		delete feature.properties.tags['cycleway:right:separation:left:width']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("cycleway:right:separation:right:width").addEventListener("keyup", function(){
+	if (document.getElementById("cycleway:right:separation:right:width").value!="") {
+		feature.properties.tags['cycleway:right:separation:right:width'] = document.getElementById("cycleway:right:separation:right:width").value
+		if (document.getElementById("ftcycleway:right:separation:right:width").checked) {
+			feature.properties.tags['cycleway:right:separation:right:width'] += "'"
+		}
+	} else {
+		delete feature.properties.tags['cycleway:right:separation:right:width']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("cycleway:left:separation:left:width").addEventListener("keyup", function(){
+	if (document.getElementById("cycleway:left:separation:left:width").value!="") {
+		feature.properties.tags['cycleway:left:separation:left:width'] = document.getElementById("cycleway:left:separation:left:width").value
+		if (document.getElementById("ftcycleway:left:separation:left:width").checked) {
+			feature.properties.tags['cycleway:left:separation:left:width'] += "'"
+		}
+	} else {
+		delete feature.properties.tags['cycleway:left:separation:left:width']
+	}
+
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("cycleway:left:separation:right:width").addEventListener("keyup", function(){
+	if (document.getElementById("cycleway:left:separation:right:width").value!="") {
+		feature.properties.tags['cycleway:left:separation:right:width'] = document.getElementById("cycleway:left:separation:right:width").value
+		if (document.getElementById("ftcycleway:left:separation:right:width").checked) {
+			feature.properties.tags['cycleway:left:separation:right:width'] += "'"
+		}
+	} else {
+		delete feature.properties.tags['cycleway:left:separation:right:width']
 	}
 
 	loadCrossSection(feature)
