@@ -451,6 +451,7 @@ html {
 	<div id="content" style="float:right;width:100%;"></div>
 	<div id="map" style="float:right;width:100%;height:400px">Loading map geometry...</div>
 	<input type="number" id="centerlineOffset" name="centerlineOffset" step="0.5" value="0">
+	<br><button id="newTileLayer" type="button" class="btn btn-primary">Switch tile layer</button>
 </div>
 
 </div>
@@ -501,6 +502,18 @@ var hybridMutant = L.gridLayer
 // 		maxZoom: 21,
 // })
 // .addTo(map);
+
+$('#newTileLayer').on('click', function(e) {
+  e.preventDefault();
+	map.removeLayer(hybridMutant)
+	L.esri.tiledMapLayer({
+			url: 'https://gis.cuyahogacounty.us/server/rest/services/IMAGERY/2022_Fall_Aerial/MapServer/',
+			zoomOffset: -10,
+			maxZoom: 21,
+	})
+	.addTo(map);
+});
+
 
 
 function loadFeature() {
@@ -833,7 +846,7 @@ function loadCrossSection(feature) {
 					// https://stackoverflow.com/a/3544927 (colons can create issues in id because : is a pseudo selector in jQuery)
 					// $('#'+tag).val(feature.properties.tags[tag]).change()
 					if (tag.includes('width')) {
-						document.getElementById(tag).value = Number(String(feature.properties.tags[tag]).replace("'", ''))
+						document.getElementById(tag).value = (String(feature.properties.tags[tag]).replace("'", ''))
 					} else {
 						document.getElementById(tag).value = feature.properties.tags[tag]
 					}
