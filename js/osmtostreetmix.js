@@ -951,6 +951,6 @@ function generateCrossSectionTable(feature) {
 
 	html = '<table class="streetmix" cellspacing="0" style="background:white;min-width:'+(totalStreetWidth*pixelsPerInch)+'px;"><tr>' + html
 
-  // console.log(offsetArray, totalStreetWidth)
+  console.log(offsetArray, totalStreetWidth)
 	return {'html': html, 'offsetArray': offsetArray }
 }

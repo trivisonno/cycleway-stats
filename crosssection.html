@@ -11,13 +11,6 @@
 html {
 	font-family: sans-serif;
 }
-
-table.streetmix {
-	table-layout: fixed;
-}
-table.streetmix td {
-	/* word-break: break-all; */
-}
 	</style>
 	<link rel="stylesheet" href="css/main.css" />
 </style>
@@ -481,7 +474,7 @@ table.streetmix td {
 		<div style="float:right;width:70%;height:100%">
 	<div id="content" style="float:right;width:100%;"></div>
 	<div id="map" style="float:right;width:100%;height:400px">Loading map geometry...</div>
-	<input type="number" id="centerlineOffset" name="centerlineOffset" step="0.5" value="0">
+	<span style="border-top:2px solid red; border-bottom:2px solid blue;padding:0px;margin:5px;float:left"><input type="number" id="centerlineOffset" name="centerlineOffset" step="0.5" value="0"></span>
 	<br><button id="newTileLayer" type="button" class="btn btn-primary">Switch tile layer</button>
 </div>
 
@@ -997,7 +990,7 @@ function loadCrossSection(feature) {
 	html = "<pre>" + tagString + "</pre>"
 	$('#code').html(html);
 	$('#streetName').html($('#streetName').text() + " (" + Math.round(widthPixels / pixelsPerInch) +"')");
-
+	document.title = $('#streetName').text() + " - CrossSection+"
 
 
 }
