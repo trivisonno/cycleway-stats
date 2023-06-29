@@ -171,7 +171,11 @@ function generateCrossSectionTable(feature) {
     'kerb' :
        {'desc': 'Kerb', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/utilities/drainage-channel-piece-center.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'},
     'cone' :
-       {'desc': 'Cones', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/construction/cone.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'}
+       {'desc': 'Cones', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/construction/cone.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'},
+    'solid_line' :
+       {'desc': 'Solid line', 'url': '', 'markingUrl': ''},
+    'dashed_line' :
+       {'desc': 'Dashed line', 'url': '', 'markingUrl': ''}
      }
 
   turnMarkings = {
@@ -306,6 +310,17 @@ function generateCrossSectionTable(feature) {
       }
       // turnLanesForward[i] = 'through'
     }
+  } if (Object.keys(tags).includes('turn:lanes') == true && Object.keys(tags).includes('oneway') == true) {
+    if (tags['oneway']=="yes") {
+      turnLanesForward = tags['turn:lanes'].split("|").reverse()
+      for (i=0; i<turnLanesForward.length; i++) {
+        if (turnLanesForward[i] == '' || turnLanesForward[i] == 'none') {
+          turnLanesForward[i] = 'through'
+        }
+        // turnLanesForward[i] = 'through'
+    }
+
+    }
   } else {
     for (i=0; i<lanesForward; i++) {
       turnLanesForward[i] = 'through'
@@ -343,20 +358,6 @@ function generateCrossSectionTable(feature) {
 
 	}
 
-	// for (i=0; i<tdNum; i++) {
-	// 	html += "<td class='picto'>lane</td>"
-	// }
-	//
-	// html += "</tr><tr>"
-	//
-	// for (i=0; i<tdNum; i++) {
-	// 	html += "<td>10'</td>"
-	// }
-	//
-	// html += "</tr></table>"
-	//html += 'total: '+lanes+', '+lanesForward + ', ' + lanesBackward + "<br>"
-
-
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == false && tags['cycleway:right:traffic_mode:left'] !== 'parking') {
 	if (tags['parking:lane:both']=='parallel' || tags['parking:lane:right']=='parallel') {
     if (Object.keys(tags).includes('parking:lane:right:parallel') == true && tags['parking:lane:right:parallel'] == 'street_side') {
@@ -367,8 +368,12 @@ function generateCrossSectionTable(feature) {
 }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:right') == true) {
-    // console.log(tags['cycleway:left:separation:left'], feature)
-    html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:right:separation:right']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    if (Object.keys(tags).includes('cycleway:right:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:right:separation:right']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:separation']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    }
+
   }
 
   if (Object.keys(tags).includes('cycleway:lanes:forward') == false || tags['cycleway:lanes:forward'].split("|").reverse()[0] != 'no') {
@@ -388,7 +393,11 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:left') == true) {
-    html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:right:separation:left']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    if (Object.keys(tags).includes('cycleway:right:separation:left') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:right:separation:left']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:separation']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    }
   }
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == true && tags['cycleway:right:traffic_mode:left'] == 'parking') {
@@ -409,7 +418,6 @@ function generateCrossSectionTable(feature) {
 		if ((tags['cycleway']=='shared_lane' || tags['cycleway:right']=='shared_lane' || tags['cycleway:both']=='shared_lane')) {
 			// html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
       if (Object.keys(tags).includes('cycleway:lanes:forward') == true) {
-        console.log(tags['cycleway:lanes:forward'].split("|").reverse()[i])
          if (tags['cycleway:lanes:forward'].split("|").reverse()[i] != 'shared_lane') {
           html += "<td style='width: "+width+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
           // html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top center;border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
@@ -507,8 +515,11 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:left:separation:left') == true) {
-
-    html += "<td style='width: "+cycleway_left_separation_left_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:left:separation:left']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    if (Object.keys(tags).includes('cycleway:left:separation:left') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_left_separation_left_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:left:separation:left']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_left_separation_left_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:separation']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    }
   }
 
   if ((tags['cycleway']=='lane' || tags['cycleway:both']=='lane' || tags['cycleway:left']=='lane') && (tags['oneway']!='yes') && (Object.keys(tags).includes('cycleway:lanes:backward') == false || tags['cycleway:lanes:backward'].split("|")[0] != 'no')) {
@@ -529,7 +540,11 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:left:separation:right') == true) {
-    html += "<td style='width: "+cycleway_left_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:left:separation:right']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    if (Object.keys(tags).includes('cycleway:left:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_left_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:left:separation:right']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_left_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:separation']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+    }
   }
 
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == false && tags['cycleway:left:traffic_mode:left'] !== 'parking') {
@@ -556,7 +571,11 @@ function generateCrossSectionTable(feature) {
 }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:right') == true) {
-    html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+markingRowHeight+"px; background-size: auto 100% !important;background: url("+itemNames[tags['cycleway:right:separation:right']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    if (Object.keys(tags).includes('cycleway:right:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+markingRowHeight+"px; background-size: auto 100% !important;background: url("+itemNames[tags['cycleway:right:separation:right']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+markingRowHeight+"px; background-size: auto 100% !important;background: url("+itemNames[tags['cycleway:separation']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    }
   }
 
   if (Object.keys(tags).includes('cycleway:lanes:forward') == false || tags['cycleway:lanes:forward'].split("|").reverse()[0] != 'no') {
@@ -577,7 +596,11 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:left') == true) {
-    html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:right:separation:left']]['markingUrl']+");background-color:black;border-left:4px solid white;border-right:4px solid white;'></td>"
+    if (Object.keys(tags).includes('cycleway:right:separation:left') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+markingRowHeight+"px; background-size: auto 100% !important;background: url("+itemNames[tags['cycleway:right:separation:left']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_right_separation_left_width+"px; height: "+markingRowHeight+"px; background-size: auto 100% !important;background: url("+itemNames[tags['cycleway:separation']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    }
   }
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == true && tags['cycleway:right:traffic_mode:left'] == 'parking') {
@@ -600,7 +623,6 @@ function generateCrossSectionTable(feature) {
 		if ((tags['cycleway']=='shared_lane' || tags['cycleway:right']=='shared_lane' || tags['cycleway:both']=='shared_lane')) {
         // if through and cycleway lanes defined and the lane isnt shared_lane
         if (Object.keys(tags).includes('cycleway:lanes:forward') == true) {
-          console.log(tags['cycleway:lanes:forward'].split("|").reverse()[i])
            if (tags['cycleway:lanes:forward'].split("|").reverse()[i] != 'shared_lane') {
             html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url("+turnMarkings['inbound'][turnLanesForward[i]]+") no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
             // html += "<td style='width: "+width+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top center;border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
@@ -698,7 +720,11 @@ function generateCrossSectionTable(feature) {
 }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:left:separation:left') == true) {
-    html += "<td style='width: "+cycleway_left_separation_left_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:left:separation:left']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    if (Object.keys(tags).includes('cycleway:left:separation:left') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_left_separation_left_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:left:separation:left']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_left_separation_left_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:separation']]['markingUrl']+");background-color:black;border-left:4px solid white;'></td>"
+    }
   }
 
   if (Object.keys(tags).includes('cycleway:lanes:backward') == false || tags['cycleway:lanes:backward'].split("|")[0] != 'no') {
@@ -726,7 +752,11 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:left:separation:right') == true) {
-    html += "<td style='width: "+cycleway_left_separation_right_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:left:separation:right']]['markingUrl']+");background-color:black;border-right:4px solid white;'></td>"
+    if (Object.keys(tags).includes('cycleway:left:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='width: "+cycleway_left_separation_right_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:left:separation:right']]['markingUrl']+");background-color:black;border-right:4px solid white;'></td>"
+    } else {
+      html += "<td style='width: "+cycleway_left_separation_right_width+"px; height: "+markingRowHeight+"px; background-size: auto 100%!important;background: url("+itemNames[tags['cycleway:separation']]['markingUrl']+");background-color:black;border-right:4px solid white;'></td>"
+    }
   }
 
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == false && tags['cycleway:left:traffic_mode:left'] !== 'parking') {
@@ -753,9 +783,12 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:right') == true) {
-    bufferType = tags['cycleway:right:separation:right']
-    html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
-		totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
+    if (Object.keys(tags).includes('cycleway:right:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:right:separation:right']]['desc']+"</td>"
+    } else {
+      html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+    }
+    totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
     offsetArray.push(totalStreetWidth)
   }
 
@@ -783,8 +816,15 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:left') == true) {
-    bufferType = tags['cycleway:right:separation:left']
-    html += "<td style='text-align: center;max-width: "+cycleway_right_separation_left_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
+    if (Object.keys(tags).includes('cycleway:right:separation:left') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:right:separation:left']]['desc']+"</td>"
+  		// totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
+      // offsetArray.push(totalStreetWidth)
+    } else {
+      html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+    }
+    // bufferType = tags['cycleway:right:separation:left']
+    // html += "<td style='text-align: center;max-width: "+cycleway_right_separation_left_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
 		totalStreetWidth += cycleway_right_separation_left_width/pixelsPerInch
     offsetArray.push(totalStreetWidth)
   }
@@ -899,8 +939,15 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:left:separation:left') == true) {
-    bufferType = tags['cycleway:left:separation:left']
-    html += "<td style='text-align: center;max-width: "+cycleway_left_separation_left_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
+    if (Object.keys(tags).includes('cycleway:left:separation:left') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='text-align: center;max-width: "+cycleway_left_separation_left_width+"px;'>"+itemNames[tags['cycleway:left:separation:left']]['desc']+"</td>"
+  		// totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
+      // offsetArray.push(totalStreetWidth)
+    } else {
+      html += "<td style='text-align: center;max-width: "+cycleway_left_separation_left_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+    }
+    // bufferType = tags['cycleway:left:separation:left']
+    // html += "<td style='text-align: center;max-width: "+cycleway_left_separation_left_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
 		totalStreetWidth += cycleway_left_separation_left_width/pixelsPerInch
     offsetArray.push(totalStreetWidth)
   }
@@ -929,8 +976,15 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:left:separation:right') == true) {
-    bufferType = tags['cycleway:left:separation:right']
-    html += "<td style='text-align: center;max-width: "+cycleway_left_separation_right_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
+    if (Object.keys(tags).includes('cycleway:left:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
+      html += "<td style='text-align: center;max-width: "+cycleway_left_separation_right_width+"px;'>"+itemNames[tags['cycleway:left:separation:right']]['desc']+"</td>"
+  		// totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
+      // offsetArray.push(totalStreetWidth)
+    } else {
+      html += "<td style='text-align: center;max-width: "+cycleway_left_separation_right_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+    }
+    // bufferType = tags['cycleway:left:separation:right']
+    // html += "<td style='text-align: center;max-width: "+cycleway_left_separation_right_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
 		totalStreetWidth += cycleway_left_separation_right_width/pixelsPerInch
     offsetArray.push(totalStreetWidth)
   }
@@ -951,6 +1005,6 @@ function generateCrossSectionTable(feature) {
 
 	html = '<table class="streetmix" cellspacing="0" style="background:white;min-width:'+(totalStreetWidth*pixelsPerInch)+'px;"><tr>' + html
 
-  console.log(offsetArray, totalStreetWidth)
+  // console.log(offsetArray, totalStreetWidth)
 	return {'html': html, 'offsetArray': offsetArray }
 }

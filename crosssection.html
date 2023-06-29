@@ -922,6 +922,13 @@ function loadCrossSection(feature) {
 			delete feature.properties.tags['parking:lane:both:parallel']
 		}
 
+		if (Object.keys(feature.properties.tags).includes("turn:lanes") && Object.keys(feature.properties.tags).includes("oneway")) {
+			if (feature.properties.tags['oneway']=="yes") {
+				feature.properties.tags['turn:lanes:forward'] = feature.properties.tags['turn:lanes']
+				delete feature.properties.tags['turn:lanes']
+			}
+		}
+
 		Object.keys(feature.properties.tags).forEach ( tag => {
 			if (document.getElementById(tag)) {
 				if (tag == "maxspeed") {
