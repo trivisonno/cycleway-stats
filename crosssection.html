@@ -154,6 +154,20 @@ html {
 			  </div>
 			</div>
 			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: red;">lanes:forward:width</label>
+			  <input id="lanes:forward:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="11' default"></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftLaneCheckFor" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+			<div class="input-group mb-3">
+			  <label class="col-sm-7 col-form-label" style="text-decoration: underline;text-decoration-color: blue;">lanes:backward:width</label>
+			  <input id="lanes:backward:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="11' default"></input>
+				<div class="input-group-text">
+			    <input class="form-check-input mt-0" id="ftLaneCheckBack" type="checkbox" value="" aria-label="Checkbox for following text input" checked><span style="padding-left:0.5rem">ft</span>
+			  </div>
+			</div>
+			<div class="input-group mb-3">
 			  <label class="col-sm-7 col-form-label">cycleway:lane:width</label>
 			  <input id="cycleway:lane:width" type="text" class="form-control" aria-label="Default select example" aria-describedby="basic-addon1" placeholder="6' default"></input>
 				<div class="input-group-text">
@@ -595,6 +609,70 @@ function matchElements() {
 		}
 
 	}
+	if (document.getElementById("lanes:forward:width").value != "") {
+		tempLanesForwardWidthArray = []
+		if (document.getElementById("ftLaneCheckFor").checked && (document.getElementById("lanes:forward:width").value.includes("'")) == false) {
+			if (document.getElementById("lanes:forward:width").value.includes("|")) {
+				// feature.properties.tags['lanes:forward:width'] = document.getElementById("lanes:forward:width").value.replaceAll("|","'|") + "'"
+				for (i=0; i<document.getElementById("lanes:forward:width").value.split("|").length; i++) {
+					if (document.getElementById("lanes:forward:width").value.split("|")[i] != '') {
+						tempLanesForwardWidthArray.push(document.getElementById("lanes:forward:width").value.split("|")[i] + "'")
+					} else {
+						tempLanesForwardWidthArray.push('')
+					}
+				}
+				feature.properties.tags['lanes:forward:width'] = tempLanesForwardWidthArray.join("|")
+			} else {
+				feature.properties.tags['lanes:forward:width'] = document.getElementById("lanes:forward:width").value.replaceAll("'","") + "'"
+			}
+		} else {
+			if (document.getElementById("lanes:forward:width").value.includes("|")) {
+				// feature.properties.tags['lanes:forward:width'] = document.getElementById("lanes:forward:width").value.replaceAll("'","")
+				for (i=0; i<document.getElementById("lanes:forward:width").value.split("|").length; i++) {
+					if (document.getElementById("lanes:forward:width").value.split("|")[i] != '') {
+						tempLanesForwardWidthArray.push(document.getElementById("lanes:forward:width").value.split("|")[i])
+					} else {
+						tempLanesForwardWidthArray.push('')
+					}
+				}
+				feature.properties.tags['lanes:forward:width'] = tempLanesForwardWidthArray.join("|")
+			} else {
+				feature.properties.tags['lanes:forward:width'] = Number(document.getElementById("lanes:forward:width").value)
+			}
+		}
+	}
+
+	if (document.getElementById("lanes:backward:width").value != "") {
+		tempLanesBackwardWidthArray = []
+		if (document.getElementById("ftLaneCheckFor").checked && (document.getElementById("lanes:backward:width").value.includes("'")) == false) {
+			if (document.getElementById("lanes:backward:width").value.includes("|")) {
+				for (i=0; i<document.getElementById("lanes:backward:width").value.split("|").length; i++) {
+					if (document.getElementById("lanes:backward:width").value.split("|")[i] != '') {
+						tempLanesBackwardWidthArray.push(document.getElementById("lanes:backward:width").value.split("|")[i] + "'")
+					} else {
+						tempLanesBackwardWidthArray.push('')
+					}
+				}
+				feature.properties.tags['lanes:backward:width'] = tempLanesBackwardWidthArray.join("|")
+			} else {
+				feature.properties.tags['lanes:backward:width'] = document.getElementById("lanes:backward:width").value.replaceAll("'","") + "'"
+			}
+		} else {
+			if (document.getElementById("lanes:backward:width").value.includes("|")) {
+				for (i=0; i<document.getElementById("lanes:backward:width").value.split("|").length; i++) {
+					if (document.getElementById("lanes:backward:width").value.split("|")[i] != '') {
+						tempLanesBackwardWidthArray.push(document.getElementById("lanes:backward:width").value.split("|")[i])
+					} else {
+						tempLanesBackwardWidthArray.push('')
+					}
+				}
+				feature.properties.tags['lanes:backward:width'] = tempLanesBackwardWidthArray.join("|")
+			} else {
+				feature.properties.tags['lanes:backward:width'] = Number(document.getElementById("lanes:backward:width").value)
+			}
+		}
+	}
+
 	if (document.getElementById("cycleway:lane:width").value != "") {
 		if (document.getElementById("ftBikeLaneCheck").checked && (document.getElementById("cycleway:lane:width").value.includes("'")) == false) {
 			feature.properties.tags['cycleway:lane:width'] = document.getElementById("cycleway:lane:width").value + "'"
@@ -674,6 +752,64 @@ document.getElementById("lanes:width").addEventListener("keyup", function(){
 		loadCrossSection(feature)
 		drawLanes(streetsAsGeojson)
 	} else if ((document.getElementById("ftLaneCheck").checked==false)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	}
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("lanes:forward:width").addEventListener("keyup", function(){
+	if (document.getElementById("lanes:forward:width").value!="") {
+		tempLanesForwardWidthArray = []
+		feature.properties.tags['lanes:forward:width'] = document.getElementById("lanes:forward:width").value
+		if (document.getElementById("ftLaneCheckFor").checked) {
+			for (i=0; i<feature.properties.tags['lanes:forward:width'].split("|").length; i++) {
+				if (feature.properties.tags['lanes:forward:width'].split("|")[i] != '') {
+					tempLanesForwardWidthArray.push(feature.properties.tags['lanes:forward:width'].split("|")[i] + "'")
+				} else {
+					tempLanesForwardWidthArray.push('')
+				}
+			}
+			feature.properties.tags['lanes:forward:width'] = tempLanesForwardWidthArray.join('|')
+		}
+	} else {
+		delete feature.properties.tags['lanes:forward:width']
+	}
+
+	if ((document.getElementById("lanes:forward:width").value>5 && document.getElementById("ftLaneCheckFor").checked)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	} else if ((document.getElementById("ftLaneCheckFor").checked==false)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	}
+	loadCrossSection(feature)
+	drawLanes(streetsAsGeojson)
+}, true);
+
+document.getElementById("lanes:backward:width").addEventListener("keyup", function(){
+	if (document.getElementById("lanes:backward:width").value!="") {
+		tempLanesBackwardWidthArray = []
+		feature.properties.tags['lanes:backward:width'] = document.getElementById("lanes:backward:width").value
+		if (document.getElementById("ftLaneCheckBack").checked) {
+			for (i=0; i<feature.properties.tags['lanes:backward:width'].split("|").length; i++) {
+				if (feature.properties.tags['lanes:backward:width'].split("|")[i] != '') {
+					tempLanesBackwardWidthArray.push(feature.properties.tags['lanes:backward:width'].split("|")[i] + "'")
+				} else {
+					tempLanesBackwardWidthArray.push('')
+				}
+			}
+			feature.properties.tags['lanes:backward:width'] = tempLanesBackwardWidthArray.join('|')
+		}
+	} else {
+		delete feature.properties.tags['lanes:backward:width']
+	}
+
+	if ((document.getElementById("lanes:backward:width").value>5 && document.getElementById("ftLaneCheckBack").checked)) {
+		loadCrossSection(feature)
+		drawLanes(streetsAsGeojson)
+	} else if ((document.getElementById("ftLaneCheckBack").checked==false)) {
 		loadCrossSection(feature)
 		drawLanes(streetsAsGeojson)
 	}
@@ -847,6 +983,22 @@ function loadCrossSection(feature) {
 			}
 
 		}
+		if (document.getElementById("lanes:forward:width").value != "") {
+			if (document.getElementById("ftLaneCheckFor").checked) {
+				feature.properties.tags['lanes:forward:width'] = document.getElementById("lanes:forward:width").value.replace("|","'|") + "'"
+			} else {
+				feature.properties.tags['lanes:forward:width'] = Number(document.getElementById("lanes:forward:width").value)
+			}
+
+		}
+		if (document.getElementById("lanes:backward:width").value != "") {
+			if (document.getElementById("ftLaneCheckBack").checked) {
+				feature.properties.tags['lanes:backward:width'] = document.getElementById("lanes:backward:width").value.replace("|","'|") + "'"
+			} else {
+				feature.properties.tags['lanes:backward:width'] = Number(document.getElementById("lanes:backward:width").value)
+			}
+
+		}
 		if (document.getElementById("cycleway:lane:width").value != "") {
 			if (document.getElementById("ftBikeLaneCheck").checked) {
 				feature.properties.tags['cycleway:lane:width'] = document.getElementById("cycleway:lane:width").value + "'"
@@ -942,8 +1094,8 @@ function loadCrossSection(feature) {
 					// console.log(tag, feature.properties.tags[tag])
 					// https://stackoverflow.com/a/3544927 (colons can create issues in id because : is a pseudo selector in jQuery)
 					// $('#'+tag).val(feature.properties.tags[tag]).change()
-					if (tag.includes('width')) {
-						document.getElementById(tag).value = (String(feature.properties.tags[tag]).replace("'", ''))
+					if (tag.includes('width') || tag.includes('lanes:forward:width') || tag.includes('lanes:backward:width')) {
+						document.getElementById(tag).value = (String(feature.properties.tags[tag]).replaceAll("'", ''))
 					} else {
 						document.getElementById(tag).value = feature.properties.tags[tag]
 					}
@@ -953,10 +1105,6 @@ function loadCrossSection(feature) {
 
 		})
 	}
-
-	// feature = {'properties': {'tags': {'lanes': Number($('#lanes').val()), 'cycleway:left': $('#cycleway:left').val(), 'cycleway:right': $('#cycleway:right').val(), 'cycleway:right:separation:right': $('#cycleway:right:separation:right').val(), 'oneway': $('#oneway').val(), 'parking:lane:left': $('#parking:lane:left').val()}}}
-
-
 
 
 	if(Object.keys(feature.properties.tags).includes('name') == true) {
@@ -1022,9 +1170,9 @@ function getWayData(id) {
 
 function loadWay(id) {
 	if (typeof streetsAsGeojson == 'undefined'){
-		console.log('Querying OSM...')
+		// console.log('Querying OSM...')
 	$.get('https://overpass-api.de/api/interpreter?data=[timeout:250][out:json];way(id:'+id+');out geom;', function(osmDataAsJson) {
-		console.log(osmDataAsJson)
+		// console.log(osmDataAsJson)
 
 		streetsAsGeojson = osmtogeojson(osmDataAsJson);
 		console.log(offsetArray)
