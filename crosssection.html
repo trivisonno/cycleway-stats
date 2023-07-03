@@ -1175,7 +1175,7 @@ function loadWay(id) {
 		// console.log(osmDataAsJson)
 
 		streetsAsGeojson = osmtogeojson(osmDataAsJson);
-		console.log(offsetArray)
+		// console.log(offsetArray)
 
 
 		// console.log((((offsetArray.at(-1)/2)-offsetArray.at(-1))*12))
@@ -1184,7 +1184,7 @@ function loadWay(id) {
 		var streetLayer = L.geoJson(streetsAsGeojson, {style: function(feature){ return {color:'yellow', dashArray:'30,10', opacity:0, interactive: false}}}).addTo(map);
 
 		map.fitBounds(streetLayer.getBounds());
-		console.log(streetsAsGeojson)
+		// console.log(streetsAsGeojson)
 		drawLanes(streetsAsGeojson)
 		calcStreetStats(streetsAsGeojson['features'][0])
 		return streetsAsGeojson;

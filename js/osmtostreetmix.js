@@ -399,6 +399,11 @@ function generateCrossSectionTable(feature) {
       turnLanesForward[i] = 'through'
     }
 
+  } else {
+    for (i=0; i<lanesBackward; i++) {
+      turnLanesForward[i] = 'through'
+    }
+
   }
 
 
