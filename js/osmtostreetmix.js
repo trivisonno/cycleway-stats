@@ -400,7 +400,7 @@ function generateCrossSectionTable(feature) {
     }
 
   } else {
-    for (i=0; i<lanesBackward; i++) {
+    for (i=0; i<lanesForward; i++) {
       turnLanesForward[i] = 'through'
     }
 

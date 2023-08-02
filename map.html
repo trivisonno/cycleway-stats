@@ -213,6 +213,7 @@
 
 
 			var streetsAsGeojson = osmtogeojson(osmDataAsJson);
+			console.log(streetsAsGeojson)
 			// console.log(boundaryAsGeojson)
 			if(boundaryAsGeojson['features'][0].geometry.type == 'MultiPolygon') {
 				var boundaryPolygon = turf.multiPolygon(boundaryAsGeojson['features'][0].geometry.coordinates);
