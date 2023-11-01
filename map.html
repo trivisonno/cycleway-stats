@@ -163,7 +163,7 @@
 		subdomains: 'abcd',
 		maxZoom: 18
 	}).addTo(map);
-	var Stamen_TonerLabels = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-labels/{z}/{x}/{y}{r}.png', {
+	var Stamen_TonerLabels = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner_labels/{z}/{x}/{y}{r}.png', {
 		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
 		subdomains: 'abcd',
 		maxZoom: 18,
@@ -324,7 +324,7 @@
 						colorHex = colors[3];
 						opacity = 1
 						// dashArrayStr='1'
-					} else if(feature.properties.tags['highway'] == "cycleway" || feature.properties.tags['cycleway'] == "separate" || feature.properties.tags['cycleway:right'] == "separate" || feature.properties.tags['cycleway:left'] == "separate" || feature.properties.tags['cycleway:both'] == "separate" || feature.properties.tags['bicycle'] == 'use_sidepath' || (feature.properties.tags['highway'] == 'footway' && feature.properties.tags['bicycle'] == 'yes') || (feature.properties.tags['highway']=='path' && (feature.properties.tags['bicycle']=='designated' || feature.properties.tags['bicycle']=='yes'))) {
+					} else if(feature.properties.tags['highway'] == "cycleway" || feature.properties.tags['cycleway'] == "separate" || feature.properties.tags['cycleway:right'] == "separate" || feature.properties.tags['cycleway:left'] == "separate" || feature.properties.tags['cycleway:both'] == "separate" || feature.properties.tags['bicycle'] == 'use_sidepath' || (feature.properties.tags['highway'] == 'footway' && feature.properties.tags['bicycle'] == 'yes') || (feature.properties.tags['highway']=='path' && (feature.properties.tags['bicycle']=='designated' || feature.properties.tags['bicycle']=='yes')) || ((Object.keys(feature.properties.tags).includes('cycleway:right:separation:left') == true && feature.properties.tags['cycleway:right:separation:left'] != 'barred_area'))) {
 						colorHex = colors[4];
 					} else {
 						//colorHex = colors[0];
@@ -334,6 +334,10 @@
 						if(feature.properties.tags['bicycle'] == 'yes' && feature.properties.tags['motor_vehicle'] == 'no') {
 							colorHex = colors[4]; // if cars banned and bicycles allowed
 						}
+					}
+
+					if( ((Object.keys(feature.properties.tags).includes('cycleway:right:separation:left') == true && feature.properties.tags['cycleway:right:separation:left'] != 'barred_area')) && ((Object.keys(feature.properties.tags).includes('cycleway:left:separation:left') == true && feature.properties.tags['cycleway:left:separation:left'] != 'barred_area'))) {
+						colorHex = colors[4];
 					}
 
 
