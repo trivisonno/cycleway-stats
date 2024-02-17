@@ -451,7 +451,8 @@ html {
 			<div class="input-group mb-3">
 			  <label class="col-sm-7 col-form-label">oneway:bicycle</label>
 			  <select id="oneway:bicycle" class="form-select form-select-sm" aria-label="Default select example" aria-describedby="basic-addon1">
-					<option value="" selected>yes</option>
+					<option value="" selected></option>
+					<option value="yes">yes</option>
 				  <option value="no">no</option>
 				</select>
 			</div>
@@ -482,6 +483,7 @@ html {
 		</form>
 		<div id="code" style="float:left;padding:0px;width:100%"></div>
 		<button  id="dlJson" type="button" class="btn btn-primary">Copy OSM tags</button>
+		<button id="openOSMedit" type="button" class="btn btn-primary">Open OSM editor</button>
 	</div>
 
 		<!-- <button class="btn btn-primary" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasRight" aria-controls="offcanvasRight" style="float:right;">View map</button> -->
@@ -490,6 +492,7 @@ html {
 	<div id="map" style="float:right;width:100%;height:400px">Loading map geometry...</div>
 	<span style="border-top:2px solid red; border-bottom:2px solid blue;padding:0px;margin:5px;float:left"><input type="number" id="centerlineOffset" name="centerlineOffset" step="0.5" value="0"></span>
 	<br><button id="newTileLayer" type="button" class="btn btn-primary">Switch tile layer</button>
+
 </div>
 
 </div>
@@ -552,6 +555,10 @@ $('#newTileLayer').on('click', function(e) {
 	.addTo(map);
 });
 
+$('#openOSMedit').on('click', function(e) {
+  window.open("https://www.openstreetmap.org/edit?way="+findGetParameter('id'), "_blank");
+});
+
 
 
 function loadFeature() {
@@ -582,6 +589,35 @@ $('form').on('change', function(e) {
 	matchElements();
 	loadCrossSection(feature)
 	drawLanes(streetsAsGeojson)
+
+	streetStats = {
+	  'total_shared_lane': 0,
+	  'total_bike_lane': 0,
+	  'total_separated_cycleway': 0,
+	  'total_cycleway_highway': 0,
+	  'total_residential_etc': 0,
+	  'shared_25': 0,
+	  'shared_35': 0,
+	  'primary': 0,
+	  'secondary': 0,
+	  'tertiary': 0,
+	  'primary_no_bikeinfra': 0,
+	  'secondary_no_bikeinfra': 0,
+	  'tertiary_no_bikeinfra': 0,
+	  'primary_cyclelane': 0,
+	  'secondary_cyclelane': 0,
+	  'tertiary_cyclelane': 0,
+	  'residential_cyclelane': 0,
+	  'primary_sharedlane': 0,
+	  'secondary_sharedlane': 0,
+	  'tertiary_sharedlane': 0,
+	  'residential_sharedlane': 0
+	}
+console.log(streetsAsGeojson)
+console.log(feature)
+streetsAsGeojson['features'][0]['properties'] = feature['properties']
+	streetStats = (calcStreetStats(streetsAsGeojson['features'][0]))
+	console.log(streetStats)
 });
 
 function matchElements() {
@@ -1122,7 +1158,7 @@ function loadCrossSection(feature) {
 	crossSectionInfo = generateCrossSectionTable(feature)
 	// console.log(crossSectionInfo)
 	offsetArray = crossSectionInfo['offsetArray']
-	// console.log(offsetArray)
+	console.log(offsetArray)
 	html = "<center><div style='padding-top:5px;display:inline-block;background-color:#a9ccdb;border-left:7px solid red;border-right:7px solid blue'><div id='streetName' style='display:block;margin-bottom:20px;'>"+streetName+"</div>"+crossSectionInfo['html'] + "</div></center></div>"
 	$('#content').html(html);
 
@@ -1146,6 +1182,8 @@ function loadCrossSection(feature) {
 	$('#code').html(html);
 	$('#streetName').html($('#streetName').text() + " (" + Math.round(widthPixels / pixelsPerInch) +"')");
 	document.title = $('#streetName').text() + " - CrossSection+"
+
+
 
 
 }
@@ -1186,7 +1224,7 @@ function loadWay(id) {
 		map.fitBounds(streetLayer.getBounds());
 		// console.log(streetsAsGeojson)
 		drawLanes(streetsAsGeojson)
-		calcStreetStats(streetsAsGeojson['features'][0])
+
 		return streetsAsGeojson;
 	});
 
@@ -1201,8 +1239,8 @@ function drawLanes(streetsAsGeojson) {
 
 			if (typeof streetsAsGeojson !== 'undefined') {
 			for (i = 0; i < offsetArray.length; i++) {
-				// console.log((((offsetArray.at(-1)/2)-offsetArray[i])*12))
-				// console.log(streetsAsGeojson)
+				console.log((((offsetArray.at(-1)/2)-offsetArray[i])*12))
+				console.log(streetsAsGeojson)
 				L.geoJson(getLineOffset(streetsAsGeojson['features'][0], (((offsetArray.at(-1)/2)-offsetArray[i]+Number($('#centerlineOffset').val()))*12), {units: 'inches'}), {
 					style: function(feature){
 						if (i==0 ) {
@@ -1256,7 +1294,7 @@ function copyTextFunc(text) {
   navigator.clipboard.writeText(text);
 
   // Alert the copied text
-  alert("Copied the text: " + text);
+  alert("Copied the text:\n\n" + text);
 }
 
 

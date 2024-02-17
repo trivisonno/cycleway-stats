@@ -60,13 +60,16 @@ function calcStreetStats(feature) {
   //   //console.log(getStreetLineStringWithinBoundary(feature));
   //   feature.geometry.coordinates = getStreetLineStringWithinBoundary(feature).geometry.coordinates;
   // }
+  // console.log(feature)
   if(Object.keys(feature.properties.tags).includes('maxspeed')) {
     maxspeed = Number(feature.properties.tags['maxspeed'].split(" ")[0]);
   }
+
   var length = turf.length(feature, {
     units: 'miles'
   })
   // console.log('length: ', length)
+
 
   if(Object.keys(feature.properties.tags).includes('bicycle') == true && Object.keys(feature.properties.tags).includes('motor_vehicle') == true) {
     if(feature.properties.tags['bicycle'] == 'yes' && feature.properties.tags['motor_vehicle'] == 'no' && (feature.properties.tags['highway'] == "trunk" || feature.properties.tags['highway'] == "trunk_link" || feature.properties.tags['highway'] == "primary" || feature.properties.tags['highway'] == "primary_link" || feature.properties.tags['highway'] == "secondary" || feature.properties.tags['highway'] == "secondary_link" || feature.properties.tags['highway'] == "tertiary" || feature.properties.tags['highway'] == "tertiary_link")) {
@@ -90,7 +93,9 @@ function calcStreetStats(feature) {
   } else if((feature.properties.tags['highway'] == "tertiary" || feature.properties.tags['highway'] == "tertiary_link") && carsBanned==false) {
     if (feature.properties.tags['oneway']=='yes') {
       streetStats.tertiary += length
+      // console.log('*1')
     } else {
+      // console.log('*2')
       streetStats.tertiary += length * 2
     }
   }
@@ -232,6 +237,12 @@ function calcStreetStats(feature) {
       } else if(feature.properties.tags['highway'] == 'residential' || feature.properties.tags['highway'] == 'unclassified' || feature.properties.tags['highway'] == 'service') {
         streetStats.residential_cyclelane += length * 2
       }
+
+      //
+      if (feature.properties.tags['oneway:bicycle']=='yes' && feature.properties.tags['oneway']=='yes' && (feature.properties.tags['cycleway'] == "lane" || feature.properties.tags['cycleway:both'] == "lane")) {
+
+      }
+      //
     }
 
     if(feature.properties.tags['cycleway:left'] == "lane") {
@@ -311,8 +322,14 @@ function calcStreetStats(feature) {
 
       if (feature.properties.tags['oneway']=='yes') {
         streetStats.primary_no_bikeinfra += length
+        if (feature.properties.tags['name']=='Lorain Avenue') {
+          console.log(length, feature.properties['id'])
+        }
       } else {
         streetStats.primary_no_bikeinfra += length * 2
+        if (feature.properties.tags['name']=='Lorain Avenue') {
+          console.log(length * 2, feature.properties['id'])
+        }
       }
 
       if(Object.keys(feature.properties.tags).includes('name') == true) {
@@ -466,6 +483,7 @@ function calcStreetStats(feature) {
       }
     }
   }
+  return streetStats;
 }
 
 

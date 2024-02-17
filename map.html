@@ -115,6 +115,60 @@
 			</div>
 		</div>
 	</div>
+	<div class="modal fade" id="exampleModal3" tabindex="-1" aria-labelledby="exampleModal3Label" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h4 class="modal-title" id="exampleModal3Label"><span id="location-name"></span> Streets</h4>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div>
+
+					<div id="overpass-api-controls" class="leaflet-bar">
+						<table style="margin: 0 auto;">
+							<tr>
+								<td width="50%" style="height: 175px;">
+						<center>	<strong><u>Primary Streets</u></strong>
+						<br>
+						<div id="myChartDiv" style="width:125px;height:125px"> <span id="myChartDivload" style="display:none">Loading data...</span>
+							<canvas id="myChart" width="125" height="125"></canvas>
+						</div></center>
+					</td><td width="50%" style="height: 175px;">
+						<center><strong><u>Secondary Streets</u></strong>
+						<br>
+						<div id="myChart2Div" style="width:125px;height:125px"> <span id="myChartDiv2load" style="display:none">Loading data...</span>
+							<canvas id="myChart2" width="125" height="125"></canvas>
+						</div></center></td>
+					</tr><tr>
+						</tr><tr>
+						<td width="50%" style="height: 175px;">
+						<center><strong><u>Tertiary Streets</u></strong>
+						<br>
+						<div id="myChart3Div" style="width:125px;height:125px"> <span id="myChartDiv3load" style="display:none">Loading data...</span>
+							<canvas id="myChart3" width="125" height="125"></canvas>
+						</div></center>
+					</td><td width="50%" style="height: 175px;vertical-align: middle;">
+						<span style="display:inline-block;width:22px;height:14px;margin-right:10px"></span> <strong><u>Legend</u></strong>
+						<br> <span id='sepColor' style="display:inline-block;width:22px;height:14px;background-color:#2c7bb6;margin-right:10px"></span> <span>Separated lane</span>
+						<br> <span id='mixColor' style="display:inline-block;width:22px;height:14px;background-color:#ffffbf;margin-right:10px"></span> <span>Mixed lane</span>
+						<br> <span id='noColor' style="display:inline-block;width:22px;height:14px;background-color:#d7191c;margin-right:10px"></span> <span>Unmarked lane</span>
+						<br> <span style="display:inline-block;width:22px;height:14px;margin-right:10px"></span> <small><a target="_blank" href=""><i>What's the difference?</i></a></small>
+					</td></tr>
+						<!-- <input id="query-textfield" value="leisure=playground" size="50">
+	            <input id="query-button" type="button" value="Search"> -->
+						</table>
+					</div>
+				</div>
+				<div class="modal-body" id="exampleModal2Body"> </div>
+
+				<div class="modal-footer">
+					<!-- https://stackoverflow.com/a/56130779
+					<button type="button" class="btn btn-secondary" id="btnPrint">Print</button> -->
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				</div>
+			</div>
+		</div>
+	</div>
 	<div id="map">
 		<div class="leaflet-control-container" style="display:none">
 			<div class="leaflet-top leaflet-right">
@@ -180,8 +234,12 @@
 	}).addTo(map)
 
 
-	function buildOverpassApiUrlRoadways(map, overpassQuery, id) {
+	function buildOverpassApiUrlRoadways(map, overpassQuery, id, year) {
+		//[date:"' + year.toString() + '-01-01T00:00:00Z"]
+
 		var query = '?data=[out:json][timeout:300];area(' + id.toString() + ')->.searchArea;(way["highway"="residential"](area.searchArea);way["highway"="tertiary"](area.searchArea);way["highway"="secondary"](area.searchArea);way["highway"="primary"](area.searchArea);way["highway"="unclassified"](area.searchArea);way["highway"~"^(footway|path)$"]["bicycle"~"^(yes|designated)$"](area.searchArea);way["highway"="cycleway"](area.searchArea);way["highway"="trunk"](area.searchArea);way["highway"="primary_link"](area.searchArea);way["highway"="secondary_link"](area.searchArea);way["highway"="tertiary_link"](area.searchArea););out geom;';
+		var query = '?data=[out:json][timeout:300][date:"' + year.toString() + '-12-31T00:00:00Z"];area(' + id.toString() + ')->.searchArea;(way["highway"](area.searchArea););out geom;';
+
 		var baseUrl = 'https://overpass.kumi.systems/api/interpreter';
 		var baseUrl = 'https://overpass-api.de/api/interpreter';
 		var resultUrl = baseUrl + query;
@@ -189,7 +247,7 @@
 	}
 
 	var chartId = 0;
-	function loadOSMData(id, name) {
+	function loadOSMData(id, name, year) {
     var timer = 0
     var timerFunction = setInterval(function() {
       timer = (Math.round((timer + Number.EPSILON) * 10) / 10)
@@ -207,13 +265,13 @@
 
 
 
-		var overpassApiUrl = buildOverpassApiUrlRoadways(map, queryTextfieldValue, id);
+		var overpassApiUrl = buildOverpassApiUrlRoadways(map, queryTextfieldValue, id, year);
 		$.get(overpassApiUrl, function(osmDataAsJson) {
 
 
 
 			var streetsAsGeojson = osmtogeojson(osmDataAsJson);
-			console.log(streetsAsGeojson)
+			// console.log(streetsAsGeojson)
 			// console.log(boundaryAsGeojson)
 			if(boundaryAsGeojson['features'][0].geometry.type == 'MultiPolygon') {
 				var boundaryPolygon = turf.multiPolygon(boundaryAsGeojson['features'][0].geometry.coordinates);
@@ -489,16 +547,20 @@
 			// console.log(streetsWithoutBikeInfraSorted)
 
 			$('#exampleModal2Body').html('')
-			calcBikeAutoRatio = (streetStats.total_shared_lane + streetStats.total_bike_lane + streetStats.total_cycleway_highway - streetStats.total_separated_cycleway) / (streetStats.primary + streetStats.secondary + streetStats.tertiary)
+
+			// console.log(streetStats.total_shared_lane, streetStats.total_bike_lane, streetStats.total_cycleway_highway, streetStats.total_separated_cycleway)
+			totalBikeSpace = (streetStats.total_shared_lane + streetStats.total_bike_lane + streetStats.total_cycleway_highway - streetStats.total_separated_cycleway).toFixed(1)
+			// we subtract total_separated_cycleway because these are roadways without bike lanes, but rather a highway=cycleway is adjacent this roadway along a separate way centerline.
+			totalStreetSpace = (streetStats.primary + streetStats.secondary + streetStats.tertiary).toFixed(1)
+
+			calcBikeAutoRatio = (totalBikeSpace) / (totalStreetSpace)
 			calcBikeAutoRatio = (Math.round((calcBikeAutoRatio + Number.EPSILON) * 100))
 
 			if (calcBikeAutoRatio=="Infinity") {
 				calcBikeAutoRatio="&infin;"
 			}
-			// console.log(streetStats.total_shared_lane, streetStats.total_bike_lane, streetStats.total_cycleway_highway, streetStats.total_separated_cycleway)
-			totalBikeSpace = (streetStats.total_shared_lane + streetStats.total_bike_lane + streetStats.total_cycleway_highway - streetStats.total_separated_cycleway).toFixed(1)
-			totalStreetSpace = (streetStats.primary + streetStats.secondary + streetStats.tertiary).toFixed(1)
-			var text = '<h5>Bike lane length &#247; Street length: <u>' + calcBikeAutoRatio + '%</u></h5><div class="alert alert-info" role="alert"><p>This metric compares the total length of all routes provided for bicycles (including off-road paths) to all non-residential street routes for all vehicles.</p><p>'+totalBikeSpace+' [total bicycle routes] &#247; '+totalStreetSpace+' [total street routes] = <b><u>'+calcBikeAutoRatio+'%</u></b></p><p>Values >75% may suggest safer and lower-stress mobility networks, even if the charts show lower values. <a target="_blank" href="more"><i>Learn more...</i></a></p></div><hr><p></p>';
+
+			var text = '<h5>Bike lane length &#247; Street length: <u>' + calcBikeAutoRatio + '%</u></h5><div class="alert alert-info" role="alert"><p>This metric compares the total length of all routes provided for bicycles (including off-road paths) to all non-residential street routes for all vehicles.</p><p>'+totalBikeSpace+' [total bicycle route miles] &#247; '+totalStreetSpace+' [total street route miles] = <b><u>'+calcBikeAutoRatio+'%</u></b></p><p>Values >75% may suggest safer and lower-stress mobility networks, even if the charts show lower values. <a target="_blank" href="more"><i>Learn more...</i></a></p></div><hr><p></p>';
 
 			text += '<div class="alert alert-warning alert-dismissible" role="alert">Statistics are calculated from OpenStreetMap (OSM) data. OSM data may be incomplete. This map can help you locate and update missing data!<br><a target="_blank" href="more"><i>Learn more about common mapping issues...</i></a><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button></div>'
 
@@ -664,7 +726,7 @@
 
 	var boundaryAsGeojson;
 
-	function analyzeLocation(lat, lng, searchName) {
+	function analyzeLocation(lat, lng, searchName, year) {
 		infoBtn.button.style.backgroundColor = 'white';
 
 		myModal.show()
@@ -700,9 +762,9 @@
 				sluggedname = string_to_slug(osmDataAsJson['elements'][0]['tags']['name:en'])
 			}
 			if(history.pushState) {
-				history.pushState(null, null, '#' + sluggedname + "-" + osm_id);
+				history.pushState(null, null, '#' + sluggedname + "-" + osm_id + "/" + year);
 			} else {
-				location.hash = '#' + sluggedname + "-" + osm_id;
+				location.hash = '#' + sluggedname + "-" + osm_id + "/" + year;
 			}
 			boundaryAsGeojson = osmtogeojson(osmDataAsJson);
 			// console.log(boundaryAsGeojson)
@@ -756,7 +818,11 @@
 				'tertiary': { '(no name)': 0 }
 			}
 
-			loadOSMData('36' + osm_id.toString().padStart(8, '0'), osmDataAsJson['elements'][0]['tags']['name']);
+			if (year === undefined) {
+				year = new Date().getFullYear();
+			}
+
+			loadOSMData('36' + osm_id.toString().padStart(8, '0'), osmDataAsJson['elements'][0]['tags']['name'], year);
 			map.fitBounds(boundaryLayer.getBounds());
 			document.getElementById("searchtext21").blur();
 			// }
@@ -841,6 +907,19 @@
 
 
 
+	var otherYearsBtn = L.easyButton('fa-calendar', function(btn, map) {
+		var myModal3 = new bootstrap.Modal(document.getElementById('exampleModal3'), {
+			keyboard: false
+		})
+		myModal3.toggle();
+		otherYearsBtn.button.style.backgroundColor = 'white';
+
+	});
+		otherYearsBtn.button.title = 'More infomation'
+	otherYearsBtn.addTo(map);
+
+
+
 	var legendBtn = L.easyButton('fa-list', function(btn, map) {
 $('.info.legend').toggle();
 	}).setPosition('bottomright').addTo(map);
@@ -869,7 +948,12 @@ $('.info.legend').toggle();
 
 	if(window.location.hash) {
 		// Fragment exists
-		analyzeLocation(0, 0, window.location.hash.split('-').at(-1))
+		if (window.location.hash.split('/')[1] === undefined) {
+			var year = new Date().getFullYear();
+		} else {
+			var year = window.location.hash.split('/')[1];
+		}
+		analyzeLocation(0, 0, window.location.hash.split('/')[0].split('-').at(-1), year)
 	} else {
 		// Fragment doesn't exist
 	}
