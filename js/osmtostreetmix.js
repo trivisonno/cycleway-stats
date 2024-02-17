@@ -391,7 +391,7 @@ function generateCrossSectionTable(feature) {
       // turnLanesForward[i] = 'through'
     }
   }
-  if (Object.keys(tags).includes('turn:lanes') == true && Object.keys(tags).includes('oneway') == true) {
+  else if (Object.keys(tags).includes('turn:lanes') == true && Object.keys(tags).includes('oneway') == true) {
     if (tags['oneway']=="yes") {
       turnLanesForward = tags['turn:lanes'].split("|").reverse()
       for (i=0; i<turnLanesForward.length; i++) {
