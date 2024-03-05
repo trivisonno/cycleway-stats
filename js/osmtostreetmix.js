@@ -26,6 +26,15 @@ function generateCrossSectionTable(feature) {
   	var lanes
 
 
+      // fix broken separation descriptions
+      if (Object.keys(tags).includes('cycleway:separation') == true) {
+        if (itemNames[tags['cycleway:separation']] == undefined) {
+          tags['cycleway:separation'] = 'barred_area'
+        }
+      }
+
+
+
         // width override based on OSM json tags
         if (Object.keys(tags).includes('lanes:width') == true) {
           if (tags['lanes:width'].toString().includes("'")) { // if imperial/feet measure
@@ -57,11 +66,11 @@ function generateCrossSectionTable(feature) {
         }
 
         // width override based on OSM json tags
-        if (Object.keys(tags).includes('parking:lane:both:width') == true) {
-          if (tags['parking:lane:both:width'].toString().includes("'")) { // if imperial/feet measure
-            widthParking = Number(tags['parking:lane:both:width'].replace("'",'')) * pixelsPerInch
+        if (Object.keys(tags).includes('parking:both:width') == true) {
+          if (tags['parking:both:width'].toString().includes("'")) { // if imperial/feet measure
+            widthParking = Number(tags['parking:both:width'].replace("'",'')) * pixelsPerInch
           } else { // if metric/meters measure
-            widthParking = tags['parking:lane:both:width'] / 0.3048 * pixelsPerInch
+            widthParking = tags['parking:both:width'] / 0.3048 * pixelsPerInch
           }
         }
 
@@ -145,10 +154,12 @@ function generateCrossSectionTable(feature) {
       delete tags['cycleway']
     }
 
+
+
     // console.log(widthBike)
 
-    vehicleRowHeight = 0.7 * pixelsPerInch * 10
-  	markingRowHeight = 0.33 * pixelsPerInch * 10
+    vehicleRowHeight = Math.round(0.7 * pixelsPerInch * 10)
+  	markingRowHeight = Math.round(0.33 * pixelsPerInch * 10)
 
     // vehicleRowHeight = 60
   	// markingRowHeight = 30
@@ -206,6 +217,7 @@ function generateCrossSectionTable(feature) {
       'right;through': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/left-straight-inbound.svg',
       'right': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/left-inbound.svg',
       'left': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/right-inbound.svg',
+      'reverse;left': 'img/uturn-right-inbound.svg',
     },
     'outbound' : {
       'through': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg',
@@ -321,6 +333,18 @@ function generateCrossSectionTable(feature) {
 			}
 		}
 	}
+
+
+  // convert busway:side tags to the bus:lanes:side format
+  if (Object.keys(tags).includes('busway:left') == true && tags['busway:left'] == 'lane') {
+      delete tags['busway:left']
+      tags['bus:lanes:forward'] = 'designated'
+      for (i=0; i<lanesForward; i++) {
+        tags['bus:lanes:forward'] += '|'
+      }
+  }
+
+
 
   // build the lanesForwardWidth array
   var lanesForwardWidth = []
@@ -456,8 +480,8 @@ function generateCrossSectionTable(feature) {
   // START DRAWING THE CROSS SECTION WITH IMGS
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == false && tags['cycleway:right:traffic_mode:left'] !== 'parking') {
-	if (tags['parking:lane:both']=='parallel' || tags['parking:lane:right']=='parallel') {
-    if (Object.keys(tags).includes('parking:lane:right:parallel') == true && tags['parking:lane:right:parallel'] == 'street_side') {
+	if (tags['parking:both']=='street_side' || tags['parking:right']=='street_side') {
+    if ((Object.keys(tags).includes('parking:right') == true && tags['parking:right'] == 'street_side') || (Object.keys(tags).includes('parking:both') == true && tags['parking:both'] == 'street_side')) {
       html += "<td style='width: "+widthParking+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background:url("+ParkingSignImg+") no-repeat bottom left, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
     }
 
@@ -468,7 +492,12 @@ function generateCrossSectionTable(feature) {
     if (Object.keys(tags).includes('cycleway:right:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
       html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:right:separation:right']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
     } else {
-      html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:separation']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+      if (itemNames[tags['cycleway:separation']] !== undefined) {
+        html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url("+itemNames[tags['cycleway:separation']]['url']+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+      } else {
+        html += "<td style='width: "+cycleway_right_separation_right_width+"px; height: "+vehicleRowHeight+"px; background: url() no-repeat bottom center;background-color:#a9ccdb;'></td>"
+      }
+
     }
 
   }
@@ -498,7 +527,7 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == true && tags['cycleway:right:traffic_mode:left'] == 'parking') {
-	if (tags['parking:lane:both']=='parallel' || tags['parking:lane:right']=='parallel') {
+	if (tags['parking:both:orientation']=='parallel' || tags['parking:right:orientation']=='parallel') {
 		html += "<td style='width: "+widthParking+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+ParkingSignImg+") no-repeat bottom left,url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
 	}
 }
@@ -539,9 +568,11 @@ function generateCrossSectionTable(feature) {
         }
       }
 
-		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && i==0) {
+		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated'))) {
 			html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+inboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
-		} else if ((tags['bus:lanes:forward']=='designated' || tags['bus:lanes:forward']=='yes|designated' || tags['bus:lanes:forward']=='yes|yes|designated') && i==0) {
+		// } else if ((tags['bus:lanes:forward']=='designated' || tags['bus:lanes:forward']=='yes|designated' || tags['bus:lanes:forward']=='yes|yes|designated') && i==0) {
+		// 	html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto !important;background: url("+inboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+  } else if ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated')) {
 			html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto !important;background: url("+inboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
 		} else if (tags['highway']=='cycleway'){
       if (Object.keys(tags).includes('cycleway:lane:width') && Number(tags['cycleway:lane:width'].replace("'",""))>7) {
@@ -553,9 +584,9 @@ function generateCrossSectionTable(feature) {
     } else if (tags['highway']=='footway' || tags['highway']=='path'){
       html += "<td style='width: "+widthBike+"px; height: "+vehicleRowHeight+"px; background-size: auto !important;background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/people/people-"+(Math.floor(Math.random() * 30)+1).toString().padStart(2, '0')+".svg) no-repeat top center;background-color:#a9ccdb;'></td>"
     } else {
-      if ((Object.keys(tags).includes('parking:lane:right') == true || Object.keys(tags).includes('parking:lane:both') && (tags['parking:lane:right'] == 'parallel' || tags['parking:lane:both']== 'parallel') && (Object.keys(tags).includes('parking:lane:right:parallel') == true)) && (tags['parking:lane:right:parallel'] == 'on_street' || tags['parking:lane:both:parallel'] == 'on_street') && (i == 0)) {
+      if ((Object.keys(tags).includes('parking:right') == true || Object.keys(tags).includes('parking:both') && (tags['parking:right:orientation'] == 'parallel' || tags['parking:both:orientation']== 'parallel') && (Object.keys(tags).includes('parking:right') == true || Object.keys(tags).includes('parking:both') == true)) && (tags['parking:right'] == 'lane' || tags['parking:both'] == 'lane') && (i == 0)) {
         html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+ParkingSignImg+") no-repeat bottom left,url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
-      } else if ((Object.keys(tags).includes('parking:lane:left') == true || Object.keys(tags).includes('parking:lane:both') && (tags['parking:lane:left'] == 'parallel' || tags['parking:lane:both']== 'parallel') && (Object.keys(tags).includes('parking:lane:left:parallel') == true)) && (tags['parking:lane:right:parallel'] == 'on_street' || tags['parking:lane:both:parallel'] == 'on_street') && (i == lanesForward-1) && tags['oneway']=='yes') {
+      } else if ((Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') && (tags['parking:left:orientation'] == 'parallel' || tags['parking:both:orientation']== 'parallel') && (Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') == true)) && (tags['parking:right'] == 'lane' || tags['parking:both'] == 'lane') && (i == lanesForward-1) && tags['oneway']=='yes') {
         html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+ParkingSignImg+") no-repeat bottom right,url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
       } else {
 		    html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
@@ -582,7 +613,9 @@ function generateCrossSectionTable(feature) {
 			html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto 100% !important;background: url("+getRandom(bikeLanePeopleOutbound)+") no-repeat bottom center, url("+forwardCarImg+") no-repeat top center;background-color:#a9ccdb;'></td>"
 		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:left']=='share_busway' || tags['cycleway:both']=='share_busway') && i==lanesBackward-1) {
 			html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto !important;background: url("+getRandom(bikeLanePeopleOutbound)+") no-repeat top center, url("+outboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
-		} else if ((tags['bus:lanes:backward']=='designated' || tags['bus:lanes:backward']=='yes|designated' || tags['bus:lanes:backward']=='yes|yes|designated') && i==lanesBackward-1) {
+		// } else if ((tags['bus:lanes:backward']=='designated' || tags['bus:lanes:backward']=='yes|designated' || tags['bus:lanes:backward']=='yes|yes|designated') && i==lanesBackward-1) {
+		// 	html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto !important;background: url("+outboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+  } else if ((Object.keys(tags).includes('bus:lanes:backward') && tags['bus:lanes:backward'].split('|')[i]=='designated')) {
 			html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto !important;background: url("+outboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
 		} else if ((tags['bus:lanes:backward']=='designated' || tags['bus:lanes:backward']=='yes|designated' || tags['bus:lanes:backward']=='yes|yes|designated') && i==lanesBackward-1) {
 			html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto !important;background: url("+outboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
@@ -597,7 +630,7 @@ function generateCrossSectionTable(feature) {
     } else  {
 
 
-    if ((Object.keys(tags).includes('parking:lane:left') == true || Object.keys(tags).includes('parking:lane:both') && (tags['parking:lane:left'] == 'parallel' || tags['parking:lane:both']== 'parallel') && (Object.keys(tags).includes('parking:lane:left:parallel') == true)) && (tags['parking:lane:left:parallel'] == 'on_street' || tags['parking:lane:both:parallel'] == 'on_street') && (i == (lanesBackward-1))) {
+    if ((Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') && (tags['parking:left:orientation'] == 'parallel' || tags['parking:both:orientation']== 'parallel') && (Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') == true)) && (tags['parking:left'] == 'lane' || tags['parking:both'] == 'lane') && (i == (lanesBackward-1))) {
       html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+ParkingSignImg+") no-repeat bottom right,url("+forwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
     } else {
       html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+forwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
@@ -606,7 +639,7 @@ function generateCrossSectionTable(feature) {
 	}
 
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == true && tags['cycleway:left:traffic_mode:left'] == 'parking') {
-  if (tags['parking:lane:both']=='parallel' || tags['parking:lane:left']=='parallel') {
+  if (tags['parking:both:orientation']=='parallel' || tags['parking:left:orientation']=='parallel') {
     html += "<td style='width: "+widthParking+"px; height: "+vehicleRowHeight+"px; background-size: cover !important;background-size: auto 100%, cover !important;background: url("+ParkingSignImg+") no-repeat bottom right,url("+forwardCarImg+") no-repeat top center;background-color:#a9ccdb;'></td>"
   }
   }
@@ -645,8 +678,8 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == false && tags['cycleway:left:traffic_mode:left'] !== 'parking') {
-  if (tags['parking:lane:both']=='parallel' || tags['parking:lane:left']=='parallel') {
-    if (Object.keys(tags).includes('parking:lane:left:parallel') == true && tags['parking:lane:left:parallel'] == 'street_side') {
+  if (tags['parking:both:orientation']=='parallel' || tags['parking:left:orientation']=='parallel') {
+    if ((Object.keys(tags).includes('parking:left') == true && tags['parking:left'] == 'street_side') || (Object.keys(tags).includes('parking:both') == true && tags['parking:both'] == 'street_side')) {
 		if(tags['oneway']=='yes') {
 			html += "<td style='width: "+widthParking+"px; height: "+vehicleRowHeight+"px; background-size: auto 100%, cover  !important;background:url("+ParkingSignImg+") no-repeat bottom right, url("+backwardCarImg+") no-repeat top center;background-color:#a9ccdb;'></td>"
 		} else {
@@ -660,11 +693,11 @@ function generateCrossSectionTable(feature) {
 	html += "</tr><tr>" // ADD LANE MARKINGS
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == false && tags['cycleway:right:traffic_mode:left'] !== 'parking') {
-    if (Object.keys(tags).includes('parking:lane:right:parallel') == true && tags['parking:lane:right:parallel'] == 'street_side') {
-	if (tags['parking:lane:both']=='parallel' || tags['parking:lane:right']=='parallel') {
-		html += "<td style='width: "+widthParking+"px; height: "+markingRowHeight+"px; background: black url() no-repeat top right;'><span style='display:block;width:100%;border-bottom:4px solid white'></span></td>"
-	}
-}
+    if ((Object.keys(tags).includes('parking:right') == true && tags['parking:right'] == 'street_side') || (Object.keys(tags).includes('parking:both') == true && tags['parking:both'] == 'street_side')) {
+    	if (tags['parking:both:orientation']=='parallel' || tags['parking:right:orientation']=='parallel') {
+    		html += "<td style='width: "+widthParking+"px; height: "+markingRowHeight+"px; background: black url() no-repeat top right;'><span style='display:block;width:100%;border-bottom:4px solid white'></span></td>"
+    	}
+    }
 }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:right') == true) {
@@ -701,7 +734,7 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == true && tags['cycleway:right:traffic_mode:left'] == 'parking') {
-	if (tags['parking:lane:both']=='parallel' || tags['parking:lane:right']=='parallel') {
+	if (tags['parking:both:orientation']=='parallel' || tags['parking:right:orientation']=='parallel') {
 		html += "<td style='width: "+widthParking+"px; height: "+markingRowHeight+"px; background: black url() no-repeat top right;'><span style='display:block;width:100%;border-bottom:4px solid white'></span></td>"
 	}
 }
@@ -744,9 +777,11 @@ function generateCrossSectionTable(feature) {
             html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+markingRowHeight+"px; background: url("+turnMarkings['inbound'][turnLanesForward[i]]+") no-repeat top center; border-left:4px dashed white; background-color:black;"+centerline+"'></td>"
           }
         }
-		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && i==0) {
+		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated'))) {
 			html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-inbound.svg) no-repeat top center; border-left:4px dashed white; background-color:#b80b0b;"+centerline+"'></td>"
-		} else if ((tags['bus:lanes:forward']=='designated' || tags['bus:lanes:forward']=='yes|designated' || tags['bus:lanes:forward']=='yes|yes|designated') && i==0) {
+		// } else if ((tags['bus:lanes:forward']=='designated' || tags['bus:lanes:forward']=='yes|designated' || tags['bus:lanes:forward']=='yes|yes|designated') && i==0) {
+		// 	html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center; border-left:4px dashed white; background-color:#b80b0b;"+centerline+"'></td>"
+		} else if ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated')) {
 			html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center; border-left:4px dashed white; background-color:#b80b0b;"+centerline+"'></td>"
 		} else if (tags['highway']=='cycleway' || tags['highway']=='footway' || tags['highway']=='path'){
       html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-left.svg) no-repeat top left;background-color:black;border-right: 2px yellow dashed;'></td>"
@@ -757,6 +792,7 @@ function generateCrossSectionTable(feature) {
 
 
     if (Object.keys(tags).includes('busway:left') == true && tags['busway:left'] == 'lane') {
+      console.log(lanesForwardWidth[i])
     		html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+markingRowHeight+"px; background: #992025 url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-inbound.svg) no-repeat top center;'></td>"
     }
 
@@ -803,6 +839,8 @@ function generateCrossSectionTable(feature) {
 			html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/sharrow-outbound.svg) no-repeat top center; border-right:4px dashed white; background-color:#b80b0b;"+centerline+"'></td>"
 		} else if ((tags['bus:lanes:backward']=='designated' || tags['bus:lanes:backward']=='yes|designated' || tags['bus:lanes:backward']=='yes|yes|designated') && i==lanesBackward-1) {
 			html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center; border-right:4px dashed white; background-color:#b80b0b;"+centerline+"'></td>"
+		} else if ((Object.keys(tags).includes('bus:lanes:backward') && tags['bus:lanes:backward'].split('|')[i]=='designated')) {
+			html += "<td style='width: "+lanesBackwardWidth[i]+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center; border-right:4px dashed white; background-color:#b80b0b;"+centerline+"'></td>"
 		} else if (tags['highway']=='cycleway' || tags['highway']=='footway' || tags['highway']=='path'){
       html += "<td style='width: "+widthBike+"px; height: "+markingRowHeight+"px; background: url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/straight-outbound.svg) no-repeat top center, url(https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/lane-right.svg) no-repeat top right;background-color:black; border-right:2px solid white;'></td>"
     } else {
@@ -811,7 +849,7 @@ function generateCrossSectionTable(feature) {
 	}
 
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == true && tags['cycleway:left:traffic_mode:left'] == 'parking') {
-	if (tags['parking:lane:both']=='parallel' || tags['parking:lane:left']=='parallel') {
+	if (tags['parking:both:orientation']=='parallel' || tags['parking:left:orientation']=='parallel') {
 		html += "<td style='width: "+widthParking+"px; height: "+markingRowHeight+"px; background: black url() no-repeat top right;'><span style='display:block;width:100%;border-bottom:4px solid white'></span></td>"
 	}
 }
@@ -857,8 +895,8 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == false && tags['cycleway:left:traffic_mode:left'] !== 'parking') {
-  if (tags['parking:lane:both']=='parallel' || tags['parking:lane:left']=='parallel') {
-    if (Object.keys(tags).includes('parking:lane:left:parallel') == true && tags['parking:lane:left:parallel'] == 'street_side') {
+  if (tags['parking:both:orientation']=='parallel' || tags['parking:left:orientation']=='parallel') {
+    if ((Object.keys(tags).includes('parking:left') == true && tags['parking:left'] == 'street_side') || (Object.keys(tags).includes('parking:both') == true && tags['parking:both'] == 'street_side')) {
     html += "<td style='width: "+widthParking+"px; height: "+markingRowHeight+"px; background: black url() no-repeat top right;'><span style='display:block;width:100%;border-bottom:4px solid white'></span></td>"
   }
 }
@@ -868,13 +906,15 @@ function generateCrossSectionTable(feature) {
 	html += '</tr><tr style="vertical-align:top; font-size:12px;font-family: sans-serif">' // ADD LANE LABELS
 
   offsetArray = [0]
+  laneNamesArray = []
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == false && tags['cycleway:right:traffic_mode:left'] !== 'parking') {
-    if (tags['parking:lane:both']=='parallel' || tags['parking:lane:right']=='parallel') {
-      if (Object.keys(tags).includes('parking:lane:right:parallel') == true && tags['parking:lane:right:parallel'] == 'street_side') {
+	if (tags['parking:both']=='street_side' || tags['parking:right']=='street_side') {
+    if ((Object.keys(tags).includes('parking:right') == true && tags['parking:right'] == 'street_side') || (Object.keys(tags).includes('parking:both') == true && tags['parking:both'] == 'street_side')) {
   		html += "<td style='text-align: center;max-width: "+widthParking+"px;'>Parking lane</td>"
   		totalStreetWidth += widthParking/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Parking lane', 1])
     }
   	}
   }
@@ -882,11 +922,14 @@ function generateCrossSectionTable(feature) {
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:right') == true) {
     if (Object.keys(tags).includes('cycleway:right:separation:right') == true && Object.keys(tags).includes('cycleway:separation') == false) {
       html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:right:separation:right']]['desc']+"</td>"
+      laneNamesArray.push([itemNames[tags['cycleway:right:separation:right']]['desc'], 1])
     } else {
       html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+      laneNamesArray.push([itemNames[tags['cycleway:separation']]['desc'], 1])
     }
     totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
     offsetArray.push(totalStreetWidth)
+
   }
 
   if (Object.keys(tags).includes('cycleway:lanes:forward') == false || tags['cycleway:lanes:forward'].split("|").reverse()[0] != 'no') {
@@ -894,10 +937,12 @@ function generateCrossSectionTable(feature) {
   		html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
   		totalStreetWidth += widthBike/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Bike lane', 1])
       if (tags['cycleway:right:oneway']=='no') {
         html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
     		totalStreetWidth += widthBike/pixelsPerInch
         offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Bike lane', 1])
       }
   	}
   }
@@ -906,10 +951,12 @@ function generateCrossSectionTable(feature) {
 		html += "<td colspan=2 style='text-align: center;max-width: "+widthBike*2+"px;'>Cycle track</td>"
 		totalStreetWidth += widthBike*2/pixelsPerInch
     offsetArray.push(totalStreetWidth)
+    laneNamesArray.push(['Cycle track', 1])
 	} else if ((tags['cycleway']=='track' || tags['cycleway:right']=='track')) {
     html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Cycle track</td>"
     totalStreetWidth += widthBike/pixelsPerInch
     offsetArray.push(totalStreetWidth)
+    laneNamesArray.push(['Cycle track', 1])
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:right:separation:left') == true) {
@@ -917,8 +964,10 @@ function generateCrossSectionTable(feature) {
       html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:right:separation:left']]['desc']+"</td>"
   		// totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
       // offsetArray.push(totalStreetWidth)
+      laneNamesArray.push([itemNames[tags['cycleway:right:separation:left']]['desc'], 1])
     } else {
       html += "<td style='text-align: center;max-width: "+cycleway_right_separation_right_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+      laneNamesArray.push([itemNames[tags['cycleway:separation']]['desc'], 1])
     }
     // bufferType = tags['cycleway:right:separation:left']
     // html += "<td style='text-align: center;max-width: "+cycleway_right_separation_left_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
@@ -927,10 +976,11 @@ function generateCrossSectionTable(feature) {
   }
 
   if (Object.keys(tags).includes('cycleway:right:traffic_mode:left') == true && tags['cycleway:right:traffic_mode:left'] == 'parking') {
-    if (tags['parking:lane:both']=='parallel' || tags['parking:lane:right']=='parallel') {
+    if (tags['parking:both:orientation']=='parallel' || tags['parking:right:orientation']=='parallel') {
       html += "<td style='text-align: center;max-width: "+widthParking+"px;'>Parking lane</td>"
       totalStreetWidth += widthParking/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Parking lane', 1])
     }
   }
 
@@ -941,34 +991,124 @@ function generateCrossSectionTable(feature) {
       html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
   		totalStreetWidth += widthBike/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Bike lane', 1])
     }
-		if ((tags['cycleway']=='shared_lane' || tags['cycleway:right']=='shared_lane' || tags['cycleway:both']=='shared_lane') && i==0) {
-			html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed lane</td>"
-      totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
-      offsetArray.push(totalStreetWidth)
-    } else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && i==0) {
+		if ((tags['cycleway']=='shared_lane' || tags['cycleway:right']=='shared_lane' || tags['cycleway:both']=='shared_lane')) {
+			// html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed lane</td>"
+      // totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+      // offsetArray.push(totalStreetWidth)
+      // laneNamesArray.push(['Mixed lane', 1])
+      if (Object.keys(tags).includes('cycleway:lanes:forward') == true) {
+         if (tags['cycleway:lanes:forward'].split("|").reverse()[i] != 'shared_lane') {
+          // html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Travel lane</td>"
+          totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+          offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Travel lane', 1])
+        }
+        // if cycleway lanes defined and the lane IS shared_lane
+        else {
+          // html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed lane</td>"
+          totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+          offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Mixed lane', 1])
+        }
+      } else if (Object.keys(tags).includes('cycleway:lanes:forward') == false) {
+        if (turnLanesForward[i]!='through' && i==0) {
+          // html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed lane</td>"
+          totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+          offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Mixed lane', 1])
+        } else if (turnLanesForward[i]=='through' && i==0){
+          // html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed lane</td>"
+          totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+          offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Mixed lane', 1])
+        } else {
+          // html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Travel lane</td>"
+          totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+          offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Travel lane', 1])
+        }
+      } else {
+        if (turnLanesForward[i]!='through') {
+          // html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto, auto 100% !important;background: url("+getRandom(bikeLanePeopleInbound)+") no-repeat top center, url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed lane</td>"
+          totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+          offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Mixed lane', 1])
+        } else {
+          // html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto 100% !important;background: url("+backwardCarImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+          html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Travel lane</td>"
+          totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+          offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Travel lane', 1])
+        }
+      }
+
+		} else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated'))) {
       html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed bus lane</td>"
       totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Mixed bus lane', 1])
+		// } else if ((tags['bus:lanes:forward']=='designated' || tags['bus:lanes:forward']=='yes|designated' || tags['bus:lanes:forward']=='yes|yes|designated') && i==0) {
+		// 	html += "<td style='width: "+lanesForwardWidth[i]+"px; height: "+vehicleRowHeight+"px; background-size: auto !important;background: url("+inboundBusImg+") no-repeat bottom center;background-color:#a9ccdb;'></td>"
+  } else if ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated')) {
+      html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Bus lane</td>"
+      totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+      offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Bus lane', 1])
+		} else if (tags['highway']=='cycleway'){
+      if (Object.keys(tags).includes('cycleway:lane:width') && Number(tags['cycleway:lane:width'].replace("'",""))>7) {
+        html += "<td class='carBackward' style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
+        totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+        offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Bike lane', 1])
+      } else {
+        html += "<td class='carBackward' style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
+        totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+        offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Travel lane', 1])
+      }
+    } else if ((tags['cycleway']=='share_busway' || tags['cycleway:right']=='share_busway' || tags['cycleway:both']=='share_busway') && ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated'))) {
+      html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Mixed bus lane</td>"
+      totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+      offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Mixed bus lane', 1])
 		} else if ((tags['bus:lanes:forward']=='designated' || tags['bus:lanes:forward']=='yes|designated' || tags['bus:lanes:forward']=='yes|yes|designated') && i==0) {
       html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Bus lane</td>"
       totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Bus lane', 1])
+		} else if ((Object.keys(tags).includes('bus:lanes:forward') && tags['bus:lanes:forward'].split('|').reverse()[i]=='designated')) {
+      html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Bus lane</td>"
+      totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
+      offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Bus lane', 1])
 		}  else if (tags['highway']=='cycleway') {
       html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
       totalStreetWidth += widthBike/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Bike lane', 1])
     }   else if (tags['highway']=='footway' || tags['highway']=='path') {
       html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Path</td>"
       totalStreetWidth += widthBike/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Path', 1])
     } else {
-      if ((Object.keys(tags).includes('parking:lane:right') == true || Object.keys(tags).includes('parking:lane:both') && (tags['parking:lane:right'] == 'parallel' || tags['parking:lane:both']== 'parallel') && (Object.keys(tags).includes('parking:lane:right:parallel') == true)) && (tags['parking:lane:right:parallel'] == 'on_street' || tags['parking:lane:both:parallel'] == 'on_street') && (i == 0)) {
+      if ((Object.keys(tags).includes('parking:right') == true || Object.keys(tags).includes('parking:both') && (tags['parking:right:orientation'] == 'parallel' || tags['parking:both:orientation']== 'parallel') && (Object.keys(tags).includes('parking:right') == true || Object.keys(tags).includes('parking:both') == true)) && (tags['parking:right'] == 'lane' || tags['parking:both'] == 'lane') && (i == 0)) {
         html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Travel lane w/parking</td>"
-      }  else if ((Object.keys(tags).includes('parking:lane:left') == true || Object.keys(tags).includes('parking:lane:both') && (tags['parking:lane:left'] == 'parallel' || tags['parking:lane:both']== 'parallel') && (Object.keys(tags).includes('parking:lane:left:parallel') == true)) && (tags['parking:lane:right:parallel'] == 'on_street' || tags['parking:lane:both:parallel'] == 'on_street') && (i == lanesForward-1) && tags['oneway']=='yes') {
+        laneNamesArray.push(['Travel lane w/parking', 1])
+      }  else if ((Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') && (tags['parking:left:orientation'] == 'parallel' || tags['parking:both:orientation']== 'parallel') && (Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') == true)) && (tags['parking:right'] == 'lane' || tags['parking:both'] == 'lane') && (i == lanesForward-1) && tags['oneway']=='yes') {
         html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Travel lane w/parking</td>"
+        laneNamesArray.push(['Travel lane w/parking', 1])
       } else {
         html += "<td class='carBackward' style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Travel lane</td>"
+        laneNamesArray.push(['Travel lane', 1])
       }
       totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
       offsetArray.push(totalStreetWidth)
@@ -981,6 +1121,7 @@ function generateCrossSectionTable(feature) {
     html += "<td style='text-align: center;max-width: "+lanesForwardWidth[i]+"px;'>Bus lane</td>"
     totalStreetWidth += lanesForwardWidth[i]/pixelsPerInch
     offsetArray.push(totalStreetWidth)
+    laneNamesArray.push(['Bus lane', 1])
     // console.log(lanesForwardWidth,lanesForwardWidth[i],pixelsPerInch,totalStreetWidth, offsetArray)
   }
 
@@ -988,6 +1129,7 @@ function generateCrossSectionTable(feature) {
 		html += "<td style='text-align: center;max-width: "+width+"px;'>Turn lane</td>"
 		totalStreetWidth += width/pixelsPerInch
     offsetArray.push(totalStreetWidth)
+    laneNamesArray.push(['Turn lane', 1])
 	}
 
 	for (i=0; i < lanesBackward; i++) {
@@ -995,32 +1137,45 @@ function generateCrossSectionTable(feature) {
       html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
   		totalStreetWidth += widthBike/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Bike lane', -1])
     }
 		if ((tags['cycleway']=='shared_lane' || tags['cycleway:left']=='shared_lane' || tags['cycleway:both']=='shared_lane') && i==lanesBackward-1) {
 			html += "<td class='carBackward' style='text-align: center;max-width: "+lanesBackwardWidth[i]+"px;'>Mixed lane</td>"
       totalStreetWidth += lanesBackwardWidth[i]/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Mixed lane', -1])
     } else if ((tags['cycleway']=='share_busway' || tags['cycleway:left']=='share_busway' || tags['cycleway:both']=='share_busway') && i==lanesBackward-1) {
         html += "<td class='carBackward' style='text-align: center;max-width: "+lanesBackwardWidth[i]+"px;'>Mixed bus lane</td>"
         totalStreetWidth += lanesBackwardWidth[i]/pixelsPerInch
         offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Mixed bus lane', -1])
   		} else if ((tags['bus:lanes:backward']=='designated' || tags['bus:lanes:backward']=='yes|designated' || tags['bus:lanes:backward']=='yes|yes|designated') && i==lanesBackward-1) {
         html += "<td class='carBackward' style='text-align: center;max-width: "+lanesBackwardWidth[i]+"px;'>Bus lane</td>"
         totalStreetWidth += lanesBackwardWidth[i]/pixelsPerInch
         offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Bus lane', -1])
+  		} else if ((Object.keys(tags).includes('bus:lanes:backward') && tags['bus:lanes:backward'].split('|')[i]=='designated')) {
+        html += "<td class='carBackward' style='text-align: center;max-width: "+lanesBackwardWidth[i]+"px;'>Bus lane</td>"
+        totalStreetWidth += lanesBackwardWidth[i]/pixelsPerInch
+        offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Bus lane', -1])
   		}   else if (tags['highway']=='cycleway') {
         html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
         totalStreetWidth += widthBike/pixelsPerInch
         offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Bike lane', -1])
       }   else if (tags['highway']=='footway' || tags['highway']=='path') {
         html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Path</td>"
         totalStreetWidth += widthBike/pixelsPerInch
         offsetArray.push(totalStreetWidth)
+        laneNamesArray.push(['Path', -1])
       } else  {
-        if ((Object.keys(tags).includes('parking:lane:left') == true || Object.keys(tags).includes('parking:lane:both') && (tags['parking:lane:left'] == 'parallel' || tags['parking:lane:both']== 'parallel') && (Object.keys(tags).includes('parking:lane:left:parallel') == true)) && (tags['parking:lane:left:parallel'] == 'on_street' || tags['parking:lane:both:parallel'] == 'on_street') && (i == (lanesBackward-1))) {
+        if ((Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') && (tags['parking:left:orientation'] == 'parallel' || tags['parking:both:orientation']== 'parallel') && (Object.keys(tags).includes('parking:left') == true || Object.keys(tags).includes('parking:both') == true)) && (tags['parking:left'] == 'lane' || tags['parking:both'] == 'lane') && (i == (lanesBackward-1))) {
     			html += "<td class='carBackward' style='text-align: center;max-width: "+lanesBackwardWidth[i]+"px;'>Travel lane w/parking</td>"
+          laneNamesArray.push(['Travel lane w/parking', -1])
         } else {
           html += "<td class='carBackward' style='text-align: center;max-width: "+lanesBackwardWidth[i]+"px;'>Travel lane</td>"
+          laneNamesArray.push(['Travel lane', -1])
         }
         totalStreetWidth += lanesBackwardWidth[i]/pixelsPerInch
         offsetArray.push(totalStreetWidth)
@@ -1029,10 +1184,11 @@ function generateCrossSectionTable(feature) {
 	}
 
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == true && tags['cycleway:left:traffic_mode:left'] == 'parking') {
-    if (tags['parking:lane:both']=='parallel' || tags['parking:lane:left']=='parallel') {
+    if (tags['parking:both:orientation']=='parallel' || tags['parking:left:orientation']=='parallel') {
       html += "<td style='text-align: center;max-width: "+widthParking+"px;'>Parking lane</td>"
       totalStreetWidth += widthParking/pixelsPerInch
       offsetArray.push(totalStreetWidth)
+      laneNamesArray.push(['Parking lane', -1])
     }
   }
 
@@ -1041,8 +1197,10 @@ function generateCrossSectionTable(feature) {
       html += "<td style='text-align: center;max-width: "+cycleway_left_separation_left_width+"px;'>"+itemNames[tags['cycleway:left:separation:left']]['desc']+"</td>"
   		// totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
       // offsetArray.push(totalStreetWidth)
+      laneNamesArray.push([itemNames[tags['cycleway:left:separation:left']]['desc'], -1])
     } else {
       html += "<td style='text-align: center;max-width: "+cycleway_left_separation_left_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+      laneNamesArray.push([itemNames[tags['cycleway:separation']]['desc'], -1])
     }
     // bufferType = tags['cycleway:left:separation:left']
     // html += "<td style='text-align: center;max-width: "+cycleway_left_separation_left_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
@@ -1056,15 +1214,18 @@ function generateCrossSectionTable(feature) {
           html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
       		totalStreetWidth += widthBike/pixelsPerInch
           offsetArray.push(totalStreetWidth)
+          laneNamesArray.push(['Bike lane', -1])
         } else {
           if (tags['oneway']=='yes') {
             html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
         		totalStreetWidth += widthBike/pixelsPerInch
             offsetArray.push(totalStreetWidth)
+            laneNamesArray.push(['Bike lane', -1])
           } else {
             html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
         		totalStreetWidth += widthBike/pixelsPerInch
             offsetArray.push(totalStreetWidth)
+            laneNamesArray.push(['Bike lane', -1])
             }
   		// html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Bike lane</td>"
   		// totalStreetWidth += widthBike/pixelsPerInch
@@ -1077,10 +1238,12 @@ function generateCrossSectionTable(feature) {
 		html += "<td colspan=2 style='text-align: center;max-width: "+widthBike*2+"px;'>Cycle track</td>"
 		totalStreetWidth += widthBike*2/pixelsPerInch
     offsetArray.push(totalStreetWidth)
+    laneNamesArray.push(['Cycle track', -1])
 	} else if ((tags['cycleway:left']=='track' || tags['cycleway']=='track')) {
     html += "<td style='text-align: center;max-width: "+widthBike+"px;'>Cycle track</td>"
     totalStreetWidth += widthBike/pixelsPerInch
     offsetArray.push(totalStreetWidth)
+    laneNamesArray.push(['Cycle track', -1])
   }
 
   if (Object.keys(tags).includes('cycleway:separation') == true || Object.keys(tags).includes('cycleway:left:separation:right') == true) {
@@ -1088,8 +1251,11 @@ function generateCrossSectionTable(feature) {
       html += "<td style='text-align: center;max-width: "+cycleway_left_separation_right_width+"px;'>"+itemNames[tags['cycleway:left:separation:right']]['desc']+"</td>"
   		// totalStreetWidth += cycleway_right_separation_right_width/pixelsPerInch
       // offsetArray.push(totalStreetWidth)
+
+      laneNamesArray.push([itemNames[tags['cycleway:left:separation:right']]['desc'], -1])
     } else {
       html += "<td style='text-align: center;max-width: "+cycleway_left_separation_right_width+"px;'>"+itemNames[tags['cycleway:separation']]['desc']+"</td>"
+      laneNamesArray.push([itemNames[tags['cycleway:separation']]['desc'], -1])
     }
     // bufferType = tags['cycleway:left:separation:right']
     // html += "<td style='text-align: center;max-width: "+cycleway_left_separation_right_width+"px;'>"+itemNames[bufferType]['desc']+"</td>"
@@ -1097,15 +1263,26 @@ function generateCrossSectionTable(feature) {
     offsetArray.push(totalStreetWidth)
   }
 
+  // if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == false && tags['cycleway:left:traffic_mode:left'] !== 'parking') {
+  //   if (tags['parking:both:orientation']=='parallel' || tags['parking:left:orientation']=='parallel') {
+  //     if (Object.keys(tags).includes('parking:left') == true && tags['parking:left'] == 'street_side') {
+  // 		html += "<td style='text-align: center;max-width: "+widthParking+"px;'>Parking lane</td>"
+  // 		totalStreetWidth += widthParking/pixelsPerInch
+  //     offsetArray.push(totalStreetWidth)
+  // 	}
+  // }
+  // }
+
   if (Object.keys(tags).includes('cycleway:left:traffic_mode:left') == false && tags['cycleway:left:traffic_mode:left'] !== 'parking') {
-    if (tags['parking:lane:both']=='parallel' || tags['parking:lane:left']=='parallel') {
-      if (Object.keys(tags).includes('parking:lane:left:parallel') == true && tags['parking:lane:left:parallel'] == 'street_side') {
-  		html += "<td style='text-align: center;max-width: "+widthParking+"px;'>Parking lane</td>"
-  		totalStreetWidth += widthParking/pixelsPerInch
+  if (tags['parking:both:orientation']=='parallel' || tags['parking:left:orientation']=='parallel') {
+    if ((Object.keys(tags).includes('parking:left') == true && tags['parking:left'] == 'street_side') || (Object.keys(tags).includes('parking:both') == true && tags['parking:both'] == 'street_side')) {
+      html += "<td style='text-align: center;max-width: "+widthParking+"px;'>Parking lane</td>"
+      totalStreetWidth += widthParking/pixelsPerInch
       offsetArray.push(totalStreetWidth)
-  	}
-  }
-  }
+      laneNamesArray.push(['Parking lane', -1])
+	}
+}
+}
 
   //console.log('totalStreetWidth: ',totalStreetWidth)
 
@@ -1114,5 +1291,5 @@ function generateCrossSectionTable(feature) {
 	html = '<table class="streetmix" cellspacing="0" style="background:white;min-width:'+(totalStreetWidth*pixelsPerInch)+'px;"><tr>' + html
 
   // console.log(offsetArray, totalStreetWidth)
-	return {'html': html, 'offsetArray': offsetArray }
+	return {'html': html, 'offsetArray': offsetArray, 'laneNames': laneNamesArray }
 }

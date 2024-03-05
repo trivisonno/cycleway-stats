@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Network+</title>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+  <script src="https://unpkg.com/osmtogeojson@2.2.12/osmtogeojson.js"></script>
+  <script src="js/osmtostreetmix.js"></script>
+  <script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="js/drawLanes.js"></script>
+  <script src="js/drawLaneMarkings.js"></script>
+  <script src="js/lineOffset1.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.css">
+	<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<script src="https://cdn.jsdelivr.net/npm/leaflet-easybutton@2/src/easy-button.js"></script>
+  <script src="https://kit.fontawesome.com/a7ec421c16.js" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" integrity="sha384-AYmEC3Yw5cVb3ZcuHtOA93w35dYTsvhLPVnYs9eStHfGJvOvKxVfELGroGkvsg+p" crossorigin="anonymous" />
+
+  <script>	const scr = document.createElement('script');	scr.setAttribute('src', window.atob('aHR0cHM6Ly9tYXBzLmdvb2dsZWFwaXMuY29tL21hcHMvYXBpL2pzP2tleT1BSXphU3lBc1JHWlRNUlFPR2hiNDNOTmdfRnRiWERZZHFkTEhWcEE='));	scr.setAttribute("async", "");	scr.setAttribute("defer", "");	document.head.appendChild(scr)</script>
+  <script src="https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js"></script>
+
+  <!-- CSS only -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <!-- JavaScript Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+  <!-- Load Esri Leaflet from CDN -->
+  <script src="https://unpkg.com/esri-leaflet@^3.0.9/dist/esri-leaflet.js"></script>
+  <script src="https://unpkg.com/esri-leaflet-vector@4.0.0/dist/esri-leaflet-vector.js"></script>
+
+  <script src="js/leaflet.rotatedMarker.js"></script>
+
+  <script src="js/calcstats.js"></script>
+
+<link rel="stylesheet" href="css/L.Control.Range.css" />
+  <script src="js/L.Control.Range-min.js"></script>
+
+  <script src="https://unpkg.com/d3-array@1"></script>
+<script src="https://unpkg.com/d3-collection@1"></script>
+<script src="https://unpkg.com/d3-path@1"></script>
+<script src="https://unpkg.com/d3-shape@1"></script>
+<script src="https://unpkg.com/d3-sankey@0"></script>
+<script>
+
+var sankey = d3.sankey();
+
+</script>
+
+  <style>
+  #expandmap>span>span {
+    margin-top:8px;
+  }
+
+  .flashMe {
+    background:white;
+  <!-- Important stuff here -->
+  -webkit-transition: flash 2s ease-out;
+  -moz-transition: flash 2s ease-out;
+  -o-transition: flash 2s ease-out;
+  transition: flash 2s ease-out;
+  animation: flash 2s forwards linear normal;
+}
+@keyframes flash {
+  0% {
+      background:white;
+  }
+  50% {
+    background:yellow;
+  }
+100% {
+      background:white;
+  }
+}
+  </style>
+</head>
+<body>
+  <div id="map" style="right:0;top:0;position:fixed;width:66%;height:100vh">Loading map geometry...</div>
+  <div id="container" style="float:left;width:33%;height:100vh">
+    <div id="stats">Stats</div>
+    <table id="table" class="table table-striped">
+      <tr>
+        <td>Existing</td>
+        <td>Proposed</td>
+      </tr>
+    </table>
+  </div>
+  <!-- <input type="number" id="centerlineOffset" name="centerlineOffset" step="0.5" value="0"> -->
+<script>
+// $('#map').css('width','33%')
+var map = L.map('map', {
+	maxZoom: 21,
+	zoomSnap: 1,
+	almostOnMouseMove: false,
+    gestureHandling: true
+}).setView([41.48850773250226, -81.70947558879621], 2);
+var hybridMutant = L.gridLayer
+  .googleMutant({
+    maxZoom: 22,
+    type: "hybrid",
+    maxNativeZoom: 22
+  })
+  .addTo(map);
+
+var initialLoadComplete = false;
+
+map.on('zoomend', function() {
+  map.removeLayer(laneMarkings);
+    laneMarkings.clearLayers();
+    if (map.getZoom() >= 19) {
+      streetsAsGeojson['features'].forEach((element) => drawLaneMarkingsFromFeature(element));
+      map.addLayer(laneMarkings);
+    }
+});
+
+map.on('zoomstart', function() {
+  map.removeLayer(laneMarkings);
+    laneMarkings.clearLayers();
+    // if (map.getZoom() >= 19) {
+    //   streetsAsGeojson['features'].forEach((element) => drawLaneMarkingsFromFeature(element));
+    //   map.addLayer(laneMarkings);
+    // }
+});
+//
+// map.on('dragend', function() {
+//   map.removeLayer(laneMarkings);
+//     laneMarkings.clearLayers();
+//     console.log('redrawing...')
+//     streetsAsGeojson['features'].forEach((element) => drawLaneMarkingsFromFeature(element));
+//     map.addLayer(laneMarkings);
+// });
+
+var lanesLayer = L.featureGroup().addTo(map);
+var laneMarkings = L.layerGroup();
+// laneMarkings.addTo(map);
+var offsetArray;
+var streetsAsGeojson;
+
+// Specify sorting preferences
+const sortLatDirection = 'North to South'; // or 'South to North'
+const sortLngDirection = 'West to East'; // or 'East to West'
+
+var id = '3600182130'
+var name = findGetParameter('street')
+var area = findGetParameter('area')
+id = '36'+area.split('-').at(-1).padStart(8, '0')
+
+var overpassApiUrl = 'https://overpass-api.de/api/interpreter?timestamp='+Date.now().toString()+'&data=[out:json][timeout:300];area(' + id.toString() + ')->.searchArea;(way[highway][~"^(name|ref)$"~"' + name + '"](area.searchArea););out geom;';
+var streetsAsGeojson;
+
+
+function updateStats(streetStats) {
+  // 25% of this street has bike lanes.
+  // 50% of this street has mixed lanes.
+  // 25% of this street is without any safe bike space.
+  bikelanes = (streetStats.primary_cyclelane+streetStats.secondary_cyclelane+streetStats.tertiary_cyclelane )
+  mixedlanes = (streetStats.primary_sharedlane+streetStats.secondary_sharedlane+streetStats.tertiary_sharedlane)
+  // mixed25lanes = (sha)
+  totallanes = (streetStats.primary+streetStats.secondary+streetStats.tertiary+streetStats.total_residential_etc)
+  nonelanes = totallanes-streetStats.total_residential_etc - (bikelanes + mixedlanes)
+
+  bikelanesPct = ~~Math.round(bikelanes / totallanes*100)
+  mixedlanesPct = (mixedlanes / totallanes*100)
+  if (mixedlanesPct > 0 && mixedlanesPct < 1) {
+    mixedlanesPct = '<1'
+  } else {
+    mixedlanesPct = ~~Math.round(mixedlanesPct)
+  }
+  mixed25lanesPct = ~~Math.round(streetStats.shared_25 / (totallanes)*100)
+  mixed35lanesPct = ~~Math.round(streetStats.shared_35 / (totallanes)*100)
+  nonelanesPct = ~~Math.round(nonelanes / totallanes*100)
+  separatedPct = ~~Math.round(streetStats.total_separated_cycleway / totallanes*100)
+  unseparatedPct = ~~Math.round((bikelanes-streetStats.total_separated_cycleway) / totallanes*100)
+  resLanesPct = Math.round(streetStats.total_residential_etc / totallanes*100)
+  if (resLanesPct == Infinity) {
+    resLanesPct = 100
+  }
+
+  $('#stats').html(
+    // resLanesPct + '% ('+Math.round(streetStats.total_residential_etc*100)/100+'mi) of this street is residential and presumed safe.<hr>'+
+    // bikelanesPct + '% ('+Math.round(bikelanes*100)/100+'mi) of this street has mobility lanes. ('+
+    // separatedPct + '% ('+Math.round(streetStats.total_separated_cycleway*100)/100+'mi) protected, '+
+    // unseparatedPct + '% ('+Math.round((bikelanes - streetStats.total_separated_cycleway)*100)/100+'mi) unprotected)<br> '+
+    // mixedlanesPct + '% ('+Math.round(mixedlanes*100)/100+'mi) of this street has mixed lanes. ('+
+    // mixed25lanesPct + '% ('+Math.round(streetStats.shared_25*100)/100+'mi) &le;25mph, '+
+    // mixed35lanesPct + '% ('+Math.round(streetStats.shared_35*100)/100+'mi) 30+)<br>'+
+    // nonelanesPct + '% ('+Math.round(nonelanes*100)/100+'mi) of this street has no marked mobility space.<br>'+
+    '<table class="table table-striped"><tr><td>Residential '+resLanesPct + '% ('+Math.round(streetStats.total_residential_etc*100)/100+'mi)</td><td></td><td>Residential '+resLanesPct + '% ('+Math.round(streetStats.total_residential_etc*100)/100+'mi)</td><td><a title="Down10 at English Wikipedia, Public domain, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Ski_trail_rating_symbol-green_circle.svg"><img width="16" alt="Ski trail rating symbol-green circle" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Ski_trail_rating_symbol-green_circle.svg/32px-Ski_trail_rating_symbol-green_circle.svg.png"></a></td></tr>'+'<tr><td rowspan=5>Non-residential '+(100-resLanesPct) + '% ('+Math.round(totallanes*100)/100+'mi)</td><td>Separated '+bikelanesPct + '% ('+Math.round(bikelanes*100)/100+'mi)</td><td>Protected '+separatedPct + '% ('+Math.round(streetStats.total_separated_cycleway*100)/100+'mi)</td><td><a title="Down10 at English Wikipedia, Public domain, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Ski_trail_rating_symbol-green_circle.svg"><img width="16" alt="Ski trail rating symbol-green circle" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Ski_trail_rating_symbol-green_circle.svg/32px-Ski_trail_rating_symbol-green_circle.svg.png"></a></td></tr>'+
+    '<tr><td></td><td>Unprotected '+unseparatedPct + '% ('+Math.round((bikelanes - streetStats.total_separated_cycleway)*100)/100+'mi)</td><td><a title="Down10 at English Wikipedia, Public domain, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Ski_trail_rating_symbol-blue_square.svg"><img width="16" alt="Ski trail rating symbol-blue square" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Ski_trail_rating_symbol-blue_square.svg/32px-Ski_trail_rating_symbol-blue_square.svg.png"></a></td></tr>'+
+    '<tr><td>Mixed '+mixedlanesPct + '% ('+Math.round(mixedlanes*100)/100+'mi)<td>&le;25MPH '+mixed25lanesPct + '% ('+Math.round(streetStats.shared_25*100)/100+'mi)</td><td><a title="Down10 at en.wikipedia, Public domain, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Ski_trail_rating_symbol-black_diamond.svg"><img width="16" alt="Ski trail rating symbol-black diamond" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Ski_trail_rating_symbol-black_diamond.svg/32px-Ski_trail_rating_symbol-black_diamond.svg.png"></a></td></tr>'+
+    '<tr><td></td><td>30+MPH '+mixed35lanesPct + '% ('+Math.round(streetStats.shared_35*100)/100+'mi)</td><td><a title="Down10 at en.wikipedia, Public domain, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Ski_trail_rating_symbol-black_diamond.svg"><img width="16" alt="Ski trail rating symbol-black diamond" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Ski_trail_rating_symbol-black_diamond.svg/32px-Ski_trail_rating_symbol-black_diamond.svg.png"></a></td></tr>'+
+    '<tr><td>Unmarked '+nonelanesPct + '% ('+Math.round(nonelanes*100)/100+'mi)</td><td>Unmarked '+nonelanesPct + '% ('+Math.round(nonelanes*100)/100+'mi)</td><td><a title="Down10 at en.wikipedia, Public domain, via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File:Ski_trail_rating_symbol-black_diamond.svg"><img width="16" alt="Ski trail rating symbol-black diamond" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Ski_trail_rating_symbol-black_diamond.svg/32px-Ski_trail_rating_symbol-black_diamond.svg.png"></a></td></tr>'+
+    '<table>'
+
+  );
+}
+
+var streetStats = new Proxy(streetStatsOrig, {
+  set: function (target, key, value) {
+      // console.log(`${key} set to ${value}`);
+      target[key] = value;
+
+      updateStats(streetStatsOrig)
+      // for (var key in streetStats){
+      //     console.log( key + ": " + streetStats[key]);
+      // }
+      return true;
+  }
+});
+
+$.get(overpassApiUrl, function(osmDataAsJson) {
+  streetsAsGeojson = orderByDirection(osmtogeojson(osmDataAsJson));
+
+  var loadingFinished = false;
+
+
+
+
+  streetsAsGeojson['features'].forEach((element) => writeToTable(element));
+  streetsAsGeojson['features'].forEach((element) => drawLanes(element))
+  streetsAsGeojson['features'].forEach((element) => drawLaneMarkingsFromFeature(element));
+  initialLoadComplete = true;
+
+  joinedLineLength = turf.length(joinLineStrings(streetsAsGeojson), {units: 'miles'});
+  // console.log(joinedLineLength)
+});
+
+function writeToTable(element) {
+  // if (element.properties.id == '913681525') {
+  //   console.log(element)
+  // }
+  // console.log(element)
+  // $( "#table" ).append( "<tr><td>" + JSON.stringify(element.properties.tags) + "</td><td></td></tr>" );
+  $( "#table" ).append( "<tr id='tr"+element.properties.id+"'><td><br>" + element.properties.tags.name + " (" + turf.length(element, {units:'miles'}).toFixed(2) + " mi) <a id='"+element.properties.id+"' href='crosssection.html?id=" + element.properties.id + "' target='_blank'><button type='button' class='btn btn-outline-secondary btn-sm'><i class='fas fa-edit'></i></button></a><button type='button' class='btn btn-outline-secondary btn-sm' id='zoomTo"+element.properties.id + "'><i class='fas fa-search'></i></button><br><span id='start" + element.properties.id + "'></span> <span id='end" + element.properties.id + "'></span><br><div style='padding-top:5px;display:inline-block;background-color:#a9ccdb;border-left:7px solid red;border-right:7px solid blue'>" + generateCrossSectionTable(element)['html'] + "</div></td><td></td></tr>" );
+  // getStreetSegmentName(element.properties.id, element.properties.tags.name)
+}
+
+function orderByDirection(featureCollection, sortLatDirection, sortLngDirection) {
+    // Helper function to calculate centroid of LineString
+    function calculateCentroid(lineString) {
+        const coords = lineString.coordinates;
+        const centroid = coords.reduce((acc, coord) => {
+            acc[0] += coord[0];
+            acc[1] += coord[1];
+            return acc;
+        }, [0, 0]);
+
+        centroid[0] /= coords.length;
+        centroid[1] /= coords.length;
+
+        return centroid;
+    }
+
+    // Sorting functions based on direction preferences
+    const latComparator = sortLatDirection === 'North to South' ? (a, b) => b - a : (a, b) => a - b;
+    const lngComparator = sortLngDirection === 'West to East' ? (a, b) => a - b : (a, b) => b - a;
+
+    // Sort features based on centroid latitude
+    featureCollection.features.sort((a, b) => {
+        const aCentroid = calculateCentroid(a.geometry);
+        const bCentroid = calculateCentroid(b.geometry);
+        return latComparator(aCentroid[1], bCentroid[1]);
+    });
+
+    // Within same latitude group, sort based on centroid longitude
+    featureCollection.features.sort((a, b) => {
+        const aCentroid = calculateCentroid(a.geometry);
+        const bCentroid = calculateCentroid(b.geometry);
+
+        if (aCentroid[1] === bCentroid[1]) {
+            return lngComparator(aCentroid[0], bCentroid[0]);
+        } else {
+            return 0; // No need to further compare if latitude differs
+        }
+    });
+
+    return featureCollection;
+}
+
+function getStreetSegmentName(element_id, name) {
+  $.get('https://overpass-api.de/api/interpreter?data=%0A%5Bout%3Acsv%28name%29%5D%3B%0Away%28'+element_id+'%29-%3E.w%3B%0Anode%28w.w%3A1%29%3B%20%20%20%20%20%0Aout%3B%20%20%20%20%20%20%20%20%20%20%20%20%20%20%0A%28way%28bn%29%5Bhighway%5D%3B%20-%20way.w%3B%29%3B%0Aout%20meta%3B', function(data) {
+
+    startstreetnames = data.split('\n')
+    startstreetnames = Array.from(new Set(startstreetnames));
+    valuesToRemove = ['name', '', name]
+    startstreetnames = startstreetnames.filter(item => !valuesToRemove.includes(item));
+    // console.log(element_id, startstreetnames);
+    $('#start'+element_id).html(startstreetnames.join(', '))
+    return startstreetnames;
+  });
+
+  $.get('https://overpass-api.de/api/interpreter?data=%0A%5Bout%3Acsv%28name%29%5D%3B%0Away%28'+element_id+'%29-%3E.w%3B%0Anode%28w.w%3A-1%29%3B%20%20%20%20%20%0Aout%3B%20%20%20%20%20%20%20%20%20%20%20%20%20%20%0A%28way%28bn%29%5Bhighway%5D%3B%20-%20way.w%3B%29%3B%0Aout%20meta%3B', function(data) {
+
+    endstreetnames = data.split('\n')
+    endstreetnames = Array.from(new Set(endstreetnames));
+    valuesToRemove = ['name', '', name]
+    endstreetnames = endstreetnames.filter(item => !valuesToRemove.includes(item));
+    // console.log(element_id, endstreetnames);
+    $('#end'+element_id).html(endstreetnames.join(', '))
+    return endstreetnames;
+  });
+}
+
+
+function findGetParameter(parameterName) {
+    var result = null,
+        tmp = [];
+    var items = location.search.substr(1).split("&");
+    for (var index = 0; index < items.length; index++) {
+        tmp = items[index].split("=");
+        if (tmp[0] === parameterName) result = decodeURIComponent(tmp[1]);
+    }
+    return result;
+}
+
+var mapexpanded = true;
+var infoBtn = L.easyButton('fa-solid fa-angles-right', function(btn, map) {
+  // var myModal2 = new bootstrap.Modal(document.getElementById('exampleModal2'), {
+  //   keyboard: false
+  // })
+  // myModal2.toggle();
+  // infoBtn.button.style.backgroundColor = 'white';
+  if (mapexpanded == false ) {
+    $('#map').css('width','66%')
+    $('#container').css('width','33%')
+    $('#expandmap>span>span').removeClass('fa-angles-left').addClass('fa-angles-right')
+    mapexpanded = true
+    infoBtn.button.title = 'Shrink map'
+    setTimeout(function(){ map.invalidateSize({pan: false})}, 400);
+  } else {
+    $('#map').css('width','33%')
+    $('#container').css('width','66%')
+    $('#expandmap>span>span').removeClass('fa-angles-right').addClass('fa-angles-left')
+    mapexpanded = false
+    infoBtn.button.title = 'Expand map'
+    setTimeout(function(){ map.invalidateSize({pan: false})}, 400);
+  }
+});
+  infoBtn.button.title = 'Shrink'
+  infoBtn.button.id = 'expandmap'
+infoBtn.addTo(map);
+
+
+
+// create a street map layer and add it to the map, making it the default basemap
+let openstreetmaps = L.tileLayer( 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+minZoom: 0,
+maxZoom: 22,
+attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+ext: 'png'
+} )
+
+
+
+var Stadia_AlidadeSmooth = L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.{ext}', {
+minZoom: 0,
+maxZoom: 22,
+attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+ext: 'png'
+});
+
+var Stadia_StamenTonerLite = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner_lite/{z}/{x}/{y}{r}.{ext}', {
+minZoom: 0,
+maxZoom: 22,
+attribution: '&copy; <a href="https://www.stadiamaps.com/" target="_blank">Stadia Maps</a> &copy; <a href="https://www.stamen.com/" target="_blank">Stamen Design</a> &copy; <a href="https://openmaptiles.org/" target="_blank">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+ext: 'png'
+});
+
+var CartoDB_Positron = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+subdomains: 'abcd',
+maxZoom: 22
+})
+
+
+var Stamen_toner_labels = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_toner_labels/{z}/{x}/{y}{r}.png', {
+attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+subdomains: 'abcd',
+maxZoom: 22
+})
+
+var cuyahoga = L.esri.tiledMapLayer({
+		url: 'https://gis.cuyahogacounty.us/server/rest/services/IMAGERY/2023_Fall_Aerial/MapServer/',
+		zoomOffset: -10,
+		maxZoom: 21,
+})
+
+
+// create an object to hold layer names as you want them to appear in the basemap switcher list
+let basemapControl = {
+"Google Maps": hybridMutant,
+// "CartoDB_Positron": CartoDB_Positron,
+// "OSM": openstreetmaps,
+// "Stadia_AlidadeSmooth": Stadia_AlidadeSmooth,
+// "Stadia_StamenTonerLite": Stadia_StamenTonerLite,
+// "Stamen_toner_labels": Stamen_toner_labels,
+"cuyahoga": cuyahoga,
+
+}
+// display the control (switcher list) on the map, by default in the top right corner
+L.control.layers( basemapControl ).addTo( map )
+
+
+
+var timer;
+var distance = 0;
+var currentPanPoint;
+var playStatus = false;
+var joinedLineLength;
+
+var panBtn = L.easyButton('fa-solid fa-play', function(btn, map) {
+  // 1. check if each line is oriented in the same direction
+    clearTimeout(timer);
+
+    // console.log(turf.flatten(turf.combine(streetsAsGeojson)))
+  // 2. for each line, start stepping a set distance along each line and panTo
+    if (playStatus == false) {
+      playStatus = true
+      moveAlongLinesWithTimer(joinLineStrings(streetsAsGeojson), map);
+      $('#panmap>span>span').removeClass('fa-play').addClass('fa-pause')
+      panBtnStop.button.title = 'Pause'
+    } else {
+      playStatus = false
+      $('#panmap>span>span').removeClass('fa-pause').addClass('fa-play')
+      panBtnStop.button.title = 'Play'
+    }
+  });
+
+panBtn.button.title = 'Play'
+panBtn.button.id = 'panmap'
+panBtn.setPosition('bottomleft').addTo(map);
+
+
+
+var panBtnStop = L.easyButton('fa-solid fa-backward-fast', function(btn, map) {
+  // 1. check if each line is oriented in the same direction
+    clearTimeout(timer);
+    distance = 0;
+    playStatus = false
+    $('#panmap>span>span').removeClass('fa-pause').addClass('fa-play')
+    panBtnStop.button.title = 'Play'
+    // console.log(turf.flatten(turf.combine(streetsAsGeojson)))
+  // 2. for each line, start stepping a set distance along each line and panTo
+
+});
+panBtnStop.button.title = 'Rewind'
+panBtnStop.button.id = 'panmapStop'
+// panBtnStop.setPosition('bottomleft').addTo(map);
+
+
+
+
+
+function moveAlongLinesWithTimer(featureCollection, map) {
+    // console.log(featureCollection)
+    let currentIndex = 0; // Keep track of the current line being processed
+
+    // Function to move along the line and update the map view
+    function moveLine() {
+        const feature = featureCollection.features[currentIndex];
+        // console.log(feature)
+        if (feature && feature.geometry.type === 'LineString') {
+
+            // if (feature.geometry.coordinates[0][1] > feature.geometry.coordinates.at(-1)[0]) {
+            //   feature.geometry.coordinates = feature.geometry.coordinates.reverse()
+            // }
+
+            const line = turf.lineString(feature.geometry.coordinates);
+            const lineLength = turf.length(line, { units: 'miles' });
+            // let distance = 0;
+
+            function move() {
+                const pointAlongLine = turf.along(line, distance, { units: 'miles' });
+                const coordinates = pointAlongLine.geometry.coordinates;
+
+                // Update the Leaflet map view
+                map.setView([coordinates[1], coordinates[0]], 21);
+
+                // Increment distance by 0.01 miles
+                distance += 0.01;
+
+                // Check if distance exceeds line length
+                if (distance < lineLength) {
+                    // Set a timer to call the move function again after 1 second
+                    timer = setTimeout(move, 1000);
+                } else {
+                    // Move to the next line once this line is completed
+                    currentIndex++;
+                    // Move to the next line after a short delay
+                    timer = setTimeout(moveLine, 1000);
+                }
+            }
+
+            // Start moving along the line
+            move();
+        } else {
+            // If there are no more lines, reset the index for reuse
+            currentIndex = 0;
+        }
+    }
+
+    // Start moving along the lines
+    moveLine();
+}
+
+
+function joinLineStrings(lineStrings) {
+  // console.log(lineStrings)
+    // Concatenate all coordinates into a single array
+    let allCoordinates = [];
+    lineStrings.features.forEach(lineString => {
+        allCoordinates = allCoordinates.concat(lineString.geometry.coordinates);
+    });
+    // Create a Set from the array to remove duplicates
+    const uniquePoints = new Set(allCoordinates.map(JSON.stringify));
+
+    // Convert the Set back to an array
+    allCoordinates = Array.from(uniquePoints).map(JSON.parse);
+
+    // console.log(allCoordinates)
+    // Determine starting point (closest to the northernmost and westernmost point)
+    let startPoint = allCoordinates[0];
+    allCoordinates.forEach(coord => {
+        if (coord[1] > startPoint[1] || (coord[1] === startPoint[1] && coord[0] < startPoint[0])) {
+            startPoint = coord;
+        }
+    });
+
+    // Calculate distances from the startPoint to each remaining point
+    const distances = allCoordinates.map(coord => {
+        return {
+            coord: coord,
+            distance: Math.sqrt(Math.pow(coord[0] - startPoint[0], 2) + Math.pow(coord[1] - startPoint[1], 2))
+        };
+    });
+
+
+    // Order coordinates based on ascending distance from the startPoint
+    const orderedCoordinates = distances.sort((a, b) => a.distance - b.distance).map(item => item.coord);
+
+    // Construct a new LineString feature
+    const joinedLineString = {
+      "type": "FeatureCollection",
+      "features": [{
+          "properties": {},
+          "type": "Feature",
+          "geometry": {
+              "type": "LineString",
+              "coordinates": [startPoint, ...orderedCoordinates]
+          }
+        }]
+    };
+    // console.log(joinedLineString)
+
+    // L.geoJson(joinedLineString).addTo(map);
+
+    return joinedLineString;
+}
+
+
+
+var slider = L.control.range({
+    position: 'bottomleft',
+    min: 0,
+    max: 100,
+    value: 0,
+    step: 1,
+    orient: 'horizontal',
+    iconClass: 'leaflet-range-icon',
+    icon: true
+});
+slider.id = 'mySliderControl'
+// slider.setAttribute('id','ranger');
+// Access the DOM element of the control and assign an id
+// var sliderElement = document.querySelector('.input-range');
+// if (sliderElement) {
+//     sliderElement.id = 'mySliderControl';
+// }
+
+slider.on('input change', function(e) {
+    // console.log(e.value); // Do something with the slider value here
+    distance = joinedLineLength * e.value/100;
+    console.log(distance)
+});
+
+map.addControl(slider);
+
+</script>
+</html>

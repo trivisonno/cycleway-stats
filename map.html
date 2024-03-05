@@ -238,7 +238,7 @@
 		//[date:"' + year.toString() + '-01-01T00:00:00Z"]
 
 		var query = '?data=[out:json][timeout:300];area(' + id.toString() + ')->.searchArea;(way["highway"="residential"](area.searchArea);way["highway"="tertiary"](area.searchArea);way["highway"="secondary"](area.searchArea);way["highway"="primary"](area.searchArea);way["highway"="unclassified"](area.searchArea);way["highway"~"^(footway|path)$"]["bicycle"~"^(yes|designated)$"](area.searchArea);way["highway"="cycleway"](area.searchArea);way["highway"="trunk"](area.searchArea);way["highway"="primary_link"](area.searchArea);way["highway"="secondary_link"](area.searchArea);way["highway"="tertiary_link"](area.searchArea););out geom;';
-		var query = '?data=[out:json][timeout:300][date:"' + year.toString() + '-12-31T00:00:00Z"];area(' + id.toString() + ')->.searchArea;(way["highway"](area.searchArea););out geom;';
+		// var query = '?data=[out:json][timeout:300][date:"' + year.toString() + '-12-31T00:00:00Z"];area(' + id.toString() + ')->.searchArea;(way["highway"](area.searchArea););out geom;';
 
 		var baseUrl = 'https://overpass.kumi.systems/api/interpreter';
 		var baseUrl = 'https://overpass-api.de/api/interpreter';
@@ -578,7 +578,8 @@
   					length = 0.05
   				}
 					if (key != '(no name)') {
-	  				keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B~%22^(name|ref)$%22~%22" + key + "%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22.*%22%5D%5B%22highway%22!~%22cycleway|residential%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+	  				// keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B~%22^(name|ref)$%22~%22" + key + "%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22.*%22%5D%5B%22highway%22!~%22cycleway|residential%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+						keyLink = "<a target='_blank' href='street.html?area="+window.location.hash.split('/')[0].split('#')[1]+"&street="+key+"'>"+key
 					} else {
 						keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B!%22name%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22primary|primary_link|trunk|trunk_link%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
 					}
@@ -602,8 +603,10 @@
   				}
 					if (key != '(no name)') {
 	  				keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B~%22^(name|ref)$%22~%22" + key + "%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22.*%22%5D%5B%22highway%22!~%22cycleway|residential%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+						keyLink = "<a target='_blank' href='street.html?area="+window.location.hash.split('/')[0].split('#')[1]+"&street="+key+"'>"+key
 					} else {
 						keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B!%22name%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22secondary|secondary_link%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+
 					}
 
 					pctLength = (Math.round(((length / (streetStats.secondary_cyclelane + streetStats.secondary_sharedlane + streetStats.secondary_no_bikeinfra)) + Number.EPSILON) * 100))
@@ -625,6 +628,7 @@
   				}
 					if (key != '(no name)') {
 	  				keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B~%22^(name|ref)$%22~%22" + key + "%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22.*%22%5D%5B%22highway%22!~%22cycleway|residential%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
+						keyLink = "<a target='_blank' href='street.html?area="+window.location.hash.split('/')[0].split('#')[1]+"&street="+key+"'>"+key
 					} else {
 						keyLink = "<a target='_blank' href='https://overpass-turbo.eu/map.html?Q=%5Bout%3Ajson%5D%5Btimeout%3A250%5D%3Barea(" + '36' + osm_id.toString().padStart(8, '0') + ")-%3E.searchArea%3B%0A(%0A%20%20way%5B!%22name%22%5D%5B%22cycleway%22!~%22.*%22%5D%5B%22cycleway:left%22!~%22.*%22%5D%5B%22cycleway:right%22!~%22.*%22%5D%5B%22cycleway:both%22!~%22.*%22%5D%5B%22highway%22~%22tertiary|tertiary_link%22%5D(area.searchArea)%3B%0A)%3B%0Aout%20body%3B%0A%3E%3B%0Aout%20skel%20qt%3B'>" + key
 					}
@@ -727,6 +731,10 @@
 	var boundaryAsGeojson;
 
 	function analyzeLocation(lat, lng, searchName, year) {
+		console.log(lat, lng, searchName, year)
+		if (year === undefined || year == 'undefined') {
+			year = new Date().getFullYear();
+		}
 		infoBtn.button.style.backgroundColor = 'white';
 
 		myModal.show()
@@ -852,7 +860,7 @@
 	});
 
 
-
+	// CAN WE DELETE THIS FUNCTION BELOW?
 	function getStreetLineStringWithinBoundary(streetGeojson) {
 		console.log(streetGeojson);
 		console.log(boundaryAsGeojson['features'][0]);
@@ -894,6 +902,7 @@
 		// console.log(json)
 		return json;
 	}
+
 	var infoBtn = L.easyButton('fa-chart-pie', function(btn, map) {
 		var myModal2 = new bootstrap.Modal(document.getElementById('exampleModal2'), {
 			keyboard: false
@@ -948,11 +957,13 @@ $('.info.legend').toggle();
 
 	if(window.location.hash) {
 		// Fragment exists
-		if (window.location.hash.split('/')[1] === undefined) {
+		console.log(window.location.hash)
+		if (window.location.hash.split('/')[1] === undefined || window.location.hash.split('/')[1] == 'undefined') {
 			var year = new Date().getFullYear();
 		} else {
 			var year = window.location.hash.split('/')[1];
 		}
+		console.log(year)
 		analyzeLocation(0, 0, window.location.hash.split('/')[0].split('-').at(-1), year)
 	} else {
 		// Fragment doesn't exist
@@ -982,13 +993,6 @@ legend.onAdd = function (map) {
 };
 
 legend.addTo(map);
-
-
-
-
-
-
-
 
 
 	</script>

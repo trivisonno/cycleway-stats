@@ -11,7 +11,7 @@ const getLineOffset = (line, distance, { units = 'kilometers' } = {}) => {
         const secondPoint = turf.transformTranslate(turf.point(lineCoords[i + 1]), distance, angle, { units })?.geometry.coordinates;
         offsetLines.push([firstPoint, secondPoint]);
     }
-
+    
     const offsetCoords = [offsetLines[0][0]]; // First point inserted
     for (let i = 0; i < offsetLines.length; i++) { // For each translated segment of the initial line
         if (offsetLines[i + 1]) { // If there's another segment after this one
