@@ -187,6 +187,8 @@ function generateCrossSectionTable(feature) {
   itemNames = {
     'flex_post' :
       {'desc': 'Flex post', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/dividers/bike-lane-divider.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'},
+    'vertical_panel':
+      { 'desc': 'Flex post', 'url': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/dividers/bike-lane-divider.svg', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg' },
     'barred_area' :
       {'desc': 'Buffer', 'url': '', 'markingUrl': 'https://raw.githubusercontent.com/streetmix/illustrations/main/images/markings/stripes-diagonal.svg'},
     'jersey_barrier' :
